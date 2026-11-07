@@ -104,6 +104,16 @@ select{font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px so
 #confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
 #confetti i{position:absolute;top:-16px;width:9px;height:14px;border-radius:3px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+/* poderes de quien mira: sacudir (cada 3 min) y desordenar el teclado (cada 5 min) */
+#powers button{background:var(--key);color:var(--dim);font-size:.95rem;padding:10px 8px}
+#powers button:not(:disabled){background:var(--butter);color:var(--ink);animation:pop .6s ease}
+#powers button:disabled{cursor:default}
+body.quake .wrap{animation:quake .22s linear infinite}
+@keyframes quake{0%{transform:translate(0,0)}25%{transform:translate(-10px,6px) rotate(-1.5deg)}50%{transform:translate(9px,-7px) rotate(1.2deg)}75%{transform:translate(-7px,-5px) rotate(-.8deg)}100%{transform:translate(0,0)}}
+.counter{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.counter span{background:var(--key);border-radius:999px;padding:4px 12px;font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums}
+.counter b{color:var(--sky)}
+.counter .bad b{color:var(--red)}
 /* reacciones: emojis y frases que suben por la pantalla un momento */
 .react{position:fixed;left:0;right:0;bottom:0;z-index:4;background:rgba(28,33,48,.96);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;
   padding:8px max(12px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
@@ -185,12 +195,14 @@ body.has-react{padding-bottom:150px}
       </g>
     </svg>
     <div class="hearts" id="hearts" aria-hidden="true"></div>
+    <div class="counter" id="counter"></div>
     <p class="lives" id="lives"></p>
     <div class="toast" id="toast" hidden></div>
     <p class="hint" id="hint"></p>
     <div class="word" id="word" aria-live="polite"></div>
     <p class="big" id="result"></p>
     <div class="keys" id="keys"></div>
+    <div class="row" id="powers" hidden><button type="button" id="pwShake"></button><button type="button" id="pwShuffle"></button></div>
     <div id="nextBox" hidden><p class="center">¿Quién adivina ahora?</p><div class="row" id="pickB"></div></div>
   </div>
 </div>
@@ -288,6 +300,10 @@ function connect(){
       const m = JSON.parse(e.data); if (m.event !== "message") return;
       const d = JSON.parse(m.message);
       // reacción: solo si es reciente (al conectar se repiten los mensajes guardados) y no es mía
+      if (d && (d.p === "shake" || d.p === "shuffle")){
+        if (!myReacts.has(d.id) && Date.now() / 1000 - m.time < 15 && S && S.phase === "play" && mySeat === S.guesser) applyPower(d.p);
+        return;
+      }
       if (d && typeof d.r === "string"){
         if (!myReacts.has(d.id) && Date.now() / 1000 - m.time < 15 && (d.from === 0 || d.from === 1)) floatUp(d.r.slice(0, 60), d.from);
         return;
@@ -371,6 +387,64 @@ for (const e of EMOS){
   b.onclick = () => react(e);
   $("emos").append(b);
 }
+/* ---------- poderes ---------- */
+const CD = { shake: 3 * 60000, shuffle: 5 * 60000 };
+let pw = null, quakeUntil = 0, shuffleUntil = 0, keyOrder = LETTERS;
+function powersTick(){
+  const spect = !!S && S.phase === "play" && mySeat !== S.guesser;
+  $("powers").hidden = !spect;
+  if (!spect) return;
+  if (!pw){ // el reloj empieza la primera vez que miras; se guarda para que recargar no lo reinicie
+    pw = load("ahorcado-poderes-" + sala);
+    if (!pw || typeof pw.shake !== "number"){ const t = Date.now(); pw = { shake: t + CD.shake, shuffle: t + CD.shuffle }; store("ahorcado-poderes-" + sala, pw); }
+  }
+  const now = Date.now();
+  setPw($("pwShake"), "🌪️ Sacudir", pw.shake - now);
+  setPw($("pwShuffle"), "🔀 Desordenar", pw.shuffle - now);
+}
+function setPw(b, label, left){
+  b.disabled = left > 0;
+  const s = Math.ceil(left / 1000);
+  b.textContent = left > 0 ? `${label} en ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : label;
+}
+setInterval(powersTick, 1000);
+function usePower(p){
+  const now = Date.now();
+  if (!pw || pw[p] > now || !S || S.phase !== "play" || mySeat === S.guesser) return;
+  pw[p] = now + CD[p]; store("ahorcado-poderes-" + sala, pw);
+  const id = Math.random().toString(36).slice(2, 10);
+  myReacts.add(id);
+  fetch(NTFY + sala, { method: "POST", body: JSON.stringify({ p, from: mySeat, id }) }).catch(() => {});
+  floatUp(p === "shake" ? "🌪️ ¡Sacudida enviada!" : "🔀 ¡Le desordenaste las letras!", mySeat);
+  powersTick();
+}
+$("pwShake").onclick = () => usePower("shake");
+$("pwShuffle").onclick = () => usePower("shuffle");
+function applyPower(p){
+  if (p === "shake"){
+    quakeUntil = Date.now() + 5000;
+    document.body.classList.remove("quake"); void document.body.offsetWidth; document.body.classList.add("quake");
+    setTimeout(() => { if (Date.now() >= quakeUntil) document.body.classList.remove("quake"); }, 5050);
+    floatUp("🌪️ ¡Te están sacudiendo la pantalla!", 1 - mySeat);
+  } else {
+    shuffleUntil = Date.now() + 30000;
+    keyOrder = [...LETTERS];
+    for (let i = keyOrder.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [keyOrder[i], keyOrder[j]] = [keyOrder[j], keyOrder[i]]; }
+    render();
+    setTimeout(() => { if (Date.now() >= shuffleUntil) render(); }, 30050);
+    floatUp("🔀 ¡Te desordenaron las letras 30 segundos!", 1 - mySeat);
+  }
+}
+// durante la sacudida, 4 de cada 10 toques caen en la tecla de al lado
+function press(L){
+  if (Date.now() < quakeUntil && S && Math.random() < 0.4){
+    const order = [...$("keys").children].map(b => b.textContent);
+    const i = order.indexOf(L);
+    const near = [order[i - 1], order[i + 1]].filter(x => x && !S.used.includes(x));
+    if (near.length) L = near[Math.floor(Math.random() * near.length)];
+  }
+  act({ t: "guess", l: L });
+}
 $("react").addEventListener("submit", e => { e.preventDefault(); react($("inSay").value); $("inSay").value = ""; });
 function confetti(){
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -422,7 +496,11 @@ function renderBoard(other){
   const fig = $("fig");
   if (lost && !fig.classList.contains("dead")) fig.style.setProperty("--d", (order * 0.6 + 0.5) + "s"); // muere al acabar el último trazo
   fig.classList.toggle("dead", lost);
-  $("lives").textContent = `Fallos: ${S.errors} de ${max} · adivina ${mySeat === S.guesser ? "tú" : other}`;
+  $("lives").textContent = `Adivina ${mySeat === S.guesser ? "tú" : other}`;
+  // contador: letras elegidas en total y fallos
+  $("counter").innerHTML = "<span>Letras dichas: <b></b></span><span class=\"bad\">Fallos: <b></b></span>";
+  const cb = $("counter").querySelectorAll("b");
+  cb[0].textContent = S.used.length; cb[1].textContent = `${S.errors} de ${max}`;
   // vidas como corazones: se rompe uno con cada fallo
   $("hearts").innerHTML = "";
   for (let k = 0; k < max; k++){
@@ -448,12 +526,12 @@ function renderBoard(other){
   if (S.hint){ const s = document.createElement("strong"); s.textContent = S.hint; $("hint").append("Pista: ", s); }
 
   $("keys").innerHTML = ""; $("keys").classList.toggle("wait", !meGuess); $("keys").hidden = over;
-  for (const L of LETTERS){
+  for (const L of (Date.now() < shuffleUntil ? keyOrder : LETTERS)){
     const b = document.createElement("button");
     b.type = "button"; b.textContent = L;
     if (used.has(L)) b.className = ([...S.word].some(c => norm(c) === L) ? "ok" : "no") + (L === last ? " just" : "");
     b.disabled = !meGuess || used.has(L);
-    b.onclick = () => act({ t: "guess", l: L });
+    b.onclick = () => press(L);
     $("keys").append(b);
   }
   const winnerMe = (lost ? 1 - S.guesser : S.guesser) === mySeat;
@@ -461,6 +539,7 @@ function renderBoard(other){
     ? (lost ? (winnerMe ? "¡Se murió el muñequito! +1 para ti" : `¡Se murió el muñequito! +1 para ${other}`) : (winnerMe ? "¡La adivinaste! +1" : `¡${other} la adivinó! +1`))
     : (meGuess ? "" : `${other} está adivinando…`);
   $("nextBox").hidden = !over;
+  powersTick();
   if (over) picks($("pickB"));
 }
 
@@ -509,7 +588,7 @@ $("copy").onclick = async () => {
 document.addEventListener("keydown", e => {
   if ($("vPlay").hidden || e.ctrlKey || e.metaKey || e.altKey || e.target.tagName === "INPUT") return;
   const k = e.key.toUpperCase();
-  if (LETTERS.includes(k)) act({ t: "guess", l: k });
+  if (LETTERS.includes(k)) press(k);
 });
 
 // arranque: si este móvil ya estaba en la partida, entra directo
