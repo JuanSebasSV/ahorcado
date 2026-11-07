@@ -42,6 +42,9 @@ button:focus-visible,.btn:focus-visible{outline:3px solid var(--chalk);outline-o
 .ghost{background:transparent;color:var(--dim);border:2px solid var(--line)}
 .err{color:var(--red);font-weight:700;margin:0}
 .err:empty{display:none}
+.extra summary{color:var(--dim);font-weight:700;font-size:.9rem;cursor:pointer;padding:6px 0;list-style:none}
+.extra summary::-webkit-details-marker{display:none}
+.extra[open] summary{margin-bottom:6px}
 svg{width:100%;max-width:min(200px,42vw);margin:0 auto;display:block}
 svg *{stroke:var(--chalk);stroke-width:5;stroke-linecap:round;fill:none}
 /* cada trazo se dibuja como a lápiz, uno tras otro */
@@ -117,7 +120,9 @@ select{font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px so
     <label for="inMax">Intentos antes de ahorcarse
       <select id="inMax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select>
     </label>
-    <label for="inHint">Pista (opcional)<input id="inHint" maxlength="50" autocomplete="off" placeholder="Ej.: un animal"></label>
+    <details class="extra"><summary>+ Añadir una pista (si quieres)</summary>
+      <input id="inHint" maxlength="50" autocomplete="off" placeholder="Ej.: un animal" aria-label="Pista">
+    </details>
     <p class="err" id="secretErr"></p>
     <button type="submit">Listo, ¡a adivinar!</button>
   </form>
@@ -345,7 +350,7 @@ $("vSecret").addEventListener("submit", e => {
   if (![...w].some(isLetter)) return $("secretErr").textContent = "Escribe al menos una letra.";
   if (!validWord(w)) return $("secretErr").textContent = "Máximo 40 caracteres y sin < ni >.";
   const hint = $("inHint").value.trim(), max = $("inMax").value;
-  $("secretErr").textContent = ""; $("inWord").value = ""; $("inHint").value = "";
+  $("secretErr").textContent = ""; $("inWord").value = ""; $("inHint").value = ""; document.querySelector(".extra").open = false;
   act({ t: "secret", word: w, hint, max });
 });
 // botones "Adivina X": cualquiera de los dos elige quién adivina la siguiente
