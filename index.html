@@ -398,7 +398,7 @@ function powersTick(){
   if (!spect) return;
   if (!pw) pw = load("ahorcado-poderes2-" + sala); // guardado para que recargar no devuelva los usos
   if (!pw || !pw.used || !pw.lock) pw = { round: null, used: {}, lock: { shake: 0, shuffle: 0 } };
-  if (pw.round !== roundId()){ pw.round = roundId(); pw.used = {}; store("ahorcado-poderes2-" + sala, pw); } // ronda nueva: usos de vuelta, el bloqueo sigue
+  if (pw.round !== roundId()){ pw.round = roundId(); pw.used = {}; pw.lock = { shake: 0, shuffle: 0 }; store("ahorcado-poderes2-" + sala, pw); } // partida nueva: todo se vuelve a habilitar
   const now = Date.now();
   setPw($("pwShake"), "🌪️ Sacudir", "shake", now);
   setPw($("pwShuffle"), "🔀 Desordenar", "shuffle", now);
