@@ -388,8 +388,8 @@ for (const e of EMOS){
   $("emos").append(b);
 }
 /* ---------- poderes ---------- */
-// cada poder se usa UNA vez por ronda, cuando quieras; al usar uno, el otro queda bloqueado 3 minutos
-const LOCK = 3 * 60000, OTHER = { shake: "shuffle", shuffle: "shake" };
+// cada poder se usa UNA vez por ronda, cuando quieras; al usar uno, el otro queda bloqueado 2 minutos
+const LOCK = 2 * 60000, OTHER = { shake: "shuffle", shuffle: "shake" };
 let pw = null, quakeUntil = 0, shuffleUntil = 0, keyOrder = LETTERS;
 const roundId = () => `${S.pts[0] + S.pts[1]}|${S.guesser}|${S.word}`;
 function powersTick(){
