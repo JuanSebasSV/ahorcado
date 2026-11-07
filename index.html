@@ -388,30 +388,32 @@ for (const e of EMOS){
   $("emos").append(b);
 }
 /* ---------- poderes ---------- */
-const CD = { shake: 3 * 60000, shuffle: 5 * 60000 };
+// cada poder se usa UNA vez por ronda, cuando quieras; al usar uno, el otro queda bloqueado 3 minutos
+const LOCK = 3 * 60000, OTHER = { shake: "shuffle", shuffle: "shake" };
 let pw = null, quakeUntil = 0, shuffleUntil = 0, keyOrder = LETTERS;
+const roundId = () => `${S.pts[0] + S.pts[1]}|${S.guesser}|${S.word}`;
 function powersTick(){
   const spect = !!S && S.phase === "play" && mySeat !== S.guesser;
   $("powers").hidden = !spect;
   if (!spect) return;
-  if (!pw){ // el reloj empieza la primera vez que miras; se guarda para que recargar no lo reinicie
-    pw = load("ahorcado-poderes-" + sala);
-    if (!pw || typeof pw.shake !== "number"){ const t = Date.now(); pw = { shake: t + CD.shake, shuffle: t + CD.shuffle }; store("ahorcado-poderes-" + sala, pw); }
-  }
+  if (!pw) pw = load("ahorcado-poderes2-" + sala); // guardado para que recargar no devuelva los usos
+  if (!pw || !pw.used || !pw.lock) pw = { round: null, used: {}, lock: { shake: 0, shuffle: 0 } };
+  if (pw.round !== roundId()){ pw.round = roundId(); pw.used = {}; store("ahorcado-poderes2-" + sala, pw); } // ronda nueva: usos de vuelta, el bloqueo sigue
   const now = Date.now();
-  setPw($("pwShake"), "🌪️ Sacudir", pw.shake - now);
-  setPw($("pwShuffle"), "🔀 Desordenar", pw.shuffle - now);
+  setPw($("pwShake"), "🌪️ Sacudir", "shake", now);
+  setPw($("pwShuffle"), "🔀 Desordenar", "shuffle", now);
 }
-function setPw(b, label, left){
-  b.disabled = left > 0;
+function setPw(b, label, p, now){
+  const left = pw.lock[p] - now;
+  b.disabled = !!pw.used[p] || left > 0;
   const s = Math.ceil(left / 1000);
-  b.textContent = left > 0 ? `${label} en ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : label;
+  b.textContent = pw.used[p] ? `${label} ✓ usado` : left > 0 ? `${label} en ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : label;
 }
 setInterval(powersTick, 1000);
 function usePower(p){
   const now = Date.now();
-  if (!pw || pw[p] > now || !S || S.phase !== "play" || mySeat === S.guesser) return;
-  pw[p] = now + CD[p]; store("ahorcado-poderes-" + sala, pw);
+  if (!pw || pw.used[p] || pw.lock[p] > now || !S || S.phase !== "play" || mySeat === S.guesser) return;
+  pw.used[p] = true; pw.lock[OTHER[p]] = now + LOCK; store("ahorcado-poderes2-" + sala, pw);
   const id = Math.random().toString(36).slice(2, 10);
   myReacts.add(id);
   fetch(NTFY + sala, { method: "POST", body: JSON.stringify({ p, from: mySeat, id }) }).catch(() => {});
