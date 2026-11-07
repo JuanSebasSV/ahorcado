@@ -80,7 +80,46 @@ select{font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px so
 .status{text-align:center;color:var(--dim);font-size:.9rem;margin:0}
 .status:empty{display:none}
 @media (min-width:600px){.keys{grid-template-columns:repeat(9,1fr)}.card{padding:20px}}
-@media (prefers-reduced-motion:reduce){.part{transition:none}svg.dead #man{animation:none}}
+/* lo que ve quien espera: letra en grande, fichas que saltan, corazones que se rompen, confeti */
+#vPlay{position:relative}
+.toast{position:absolute;left:50%;top:30%;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;z-index:3;animation:toast 1.7s ease forwards}
+.toast b{width:88px;height:88px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:2.8rem;background:var(--sky);color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.no b{background:var(--red)}
+.toast span{font-weight:800;background:var(--board);padding:4px 12px;border-radius:999px;white-space:nowrap}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-90%) scale(.9)}}
+.word i.pop{animation:pop .6s ease}
+@keyframes pop{0%{transform:scale(.2) translateY(12px);color:var(--sky)}60%{transform:scale(1.4);color:var(--sky)}100%{transform:scale(1)}}
+.keys button.just{animation:pop .6s ease}
+.shake{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.hearts{display:flex;justify-content:center;flex-wrap:wrap;gap:4px;font-size:1.25rem;line-height:1}
+.hearts i{font-style:normal;color:var(--peach);transition:color .3s,transform .3s}
+.hearts i.lost{color:var(--line);transform:scale(.8)}
+.hearts i.break{animation:brk .7s ease}
+@keyframes brk{0%{transform:scale(1.5) rotate(-15deg);color:var(--red)}50%{transform:scale(1.2) rotate(10deg);color:var(--red)}100%{transform:scale(.8)}}
+.dots{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+.dots i{width:7px;height:7px;border-radius:50%;background:currentColor;animation:dot 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-5px)}}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+#confetti i{position:absolute;top:-16px;width:9px;height:14px;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+/* reacciones: emojis y frases que suben por la pantalla un momento */
+.react{position:fixed;left:0;right:0;bottom:0;z-index:4;background:rgba(28,33,48,.96);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;
+  padding:8px max(12px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.emos{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:560px;margin:0 auto;width:100%}
+.emos::-webkit-scrollbar{display:none}
+.emos button{background:transparent;font-size:1.55rem;min-height:42px;padding:0 6px;flex:0 0 auto;border-radius:10px}
+.say{display:flex;gap:6px;max-width:560px;margin:0 auto;width:100%}
+.say input{padding:9px 12px;font-size:16px;min-width:0}
+.say button{min-height:44px;padding:0 16px;background:var(--peach)}
+body.has-react{padding-bottom:150px}
+#floaters{position:fixed;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+.floater{position:absolute;bottom:140px;max-width:72vw;background:var(--board);color:var(--chalk);padding:8px 14px;border-radius:18px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.4);overflow-wrap:anywhere;animation:floatUp 3.2s ease-out forwards}
+.floater small{color:var(--peach);font-weight:800;font-size:.85rem}
+.floater.emo{background:none;box-shadow:none;font-size:3.4rem;padding:0;line-height:1}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,20px) scale(.4)}12%{opacity:1;transform:translate(-50%,0) scale(1.2)}22%{transform:translate(-50%,-10px) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-48vh)}}
+@media (prefers-reduced-motion:reduce){.part{transition:none}svg.dead #man{animation:none}.toast,.word i.pop,.keys button.just,.shake,.hearts i.break,.dots i{animation:none}}
 </style>
 </head>
 <body>
@@ -145,7 +184,9 @@ select{font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px so
         <g id="face"><path d="M122 44l6 6M128 44l-6 6M132 44l6 6M138 44l-6 6M124 59q6-5 12 0"/></g>
       </g>
     </svg>
+    <div class="hearts" id="hearts" aria-hidden="true"></div>
     <p class="lives" id="lives"></p>
+    <div class="toast" id="toast" hidden></div>
     <p class="hint" id="hint"></p>
     <div class="word" id="word" aria-live="polite"></div>
     <p class="big" id="result"></p>
@@ -153,6 +194,12 @@ select{font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px so
     <div id="nextBox" hidden><p class="center">¿Quién adivina ahora?</p><div class="row" id="pickB"></div></div>
   </div>
 </div>
+<div id="confetti" aria-hidden="true"></div>
+<div id="floaters" aria-live="polite"></div>
+<form class="react" id="react" hidden>
+  <div class="emos" id="emos"></div>
+  <div class="say"><input id="inSay" maxlength="60" autocomplete="off" enterkeyhint="send" placeholder="Escribe algo o cualquier emoji…" aria-label="Mensaje"><button type="submit">Enviar</button></div>
+</form>
 
 <script>
 /* La partida vive en ntfy.sh (mensajería gratuita por HTTPS, sin cuentas): cada jugada publica el estado entero
@@ -237,7 +284,16 @@ function connect(){
     } catch {}
   }, 8000);
   es.onmessage = e => {
-    try { const m = JSON.parse(e.data); if (m.event === "message") receive(JSON.parse(m.message)); } catch {}
+    try {
+      const m = JSON.parse(e.data); if (m.event !== "message") return;
+      const d = JSON.parse(m.message);
+      // reacción: solo si es reciente (al conectar se repiten los mensajes guardados) y no es mía
+      if (d && typeof d.r === "string"){
+        if (!myReacts.has(d.id) && Date.now() / 1000 - m.time < 15 && (d.from === 0 || d.from === 1)) floatUp(d.r.slice(0, 60), d.from);
+        return;
+      }
+      receive(d);
+    } catch {}
   };
   // tras recibir lo guardado: si mi copia es más nueva (o el servidor ya la borró), la vuelvo a subir; y me apunto con mi nombre
   loadedTimer = setTimeout(() => {
@@ -255,6 +311,8 @@ function render(){
   if (mySeat === null){ $("score").hidden = true; return show("vName"); }
   if (!S){ $("score").hidden = true; $("waitMsg").textContent = "Cargando la partida…"; return show("vWait"); }
   $("score").hidden = false;
+  const reacting = !!S.names[1] && !(S.phase === "secret" && mySeat === 1 - S.guesser); // no tapa el formulario de la palabra
+  $("react").hidden = !reacting; document.body.classList.toggle("has-react", reacting);
   for (const i of [0, 1]){
     $("n"+i).textContent = S.names[i] || "—";
     $("t"+i).innerHTML = "";
@@ -276,21 +334,79 @@ function render(){
       $("secretTitle").textContent = `Te toca escribir la palabra para ${other}`;
       return show("vSecret");
     }
-    $("waitMsg").textContent = `${other} está escribiendo la palabra secreta…`;
+    waitText(`${other} está escribiendo la palabra secreta`);
     return show("vWait");
   }
   renderBoard(other); show("vPlay");
 }
 
+let seen = { word: null, g: null, used: [], over: false };
+
+/* ---------- reacciones (van aparte del estado de la partida) ---------- */
+const EMOS = "😂 🤣 😘 😍 🥰 😜 🤪 😏 😱 😭 🙈 🫣 🤔 👀 🔥 💀 💔 ❤️ 💋 👏 🎉 🥳 😈 🤡 😴 🍀 🙏 👻".split(" ");
+const myReacts = new Set();
+let lastReact = 0;
+function react(r){
+  r = String(r).trim().slice(0, 60);
+  if (!r || !sala || mySeat === null) return;
+  const now = Date.now();
+  if (now - lastReact < 1200) return; // sin spam: ntfy limita los envíos
+  lastReact = now;
+  const id = Math.random().toString(36).slice(2, 10);
+  myReacts.add(id); floatUp(r, mySeat);
+  fetch(NTFY + sala, { method: "POST", body: JSON.stringify({ r, from: mySeat, id }) }).catch(() => {});
+}
+function floatUp(r, from){
+  const el = document.createElement("div");
+  const emo = !/[\p{L}\p{N}]/u.test(r) && [...r].length <= 6;
+  el.className = "floater" + (emo ? " emo" : "");
+  el.style.left = (15 + Math.random() * 70) + "%";
+  if (!emo){ const n = document.createElement("small"); n.textContent = (from === mySeat ? "Tú" : (S && S.names[from]) || "") + ": "; el.append(n); }
+  el.append(r);
+  $("floaters").append(el);
+  setTimeout(() => el.remove(), 3300);
+}
+for (const e of EMOS){
+  const b = document.createElement("button"); b.type = "button"; b.textContent = e; b.setAttribute("aria-label", "Enviar " + e);
+  b.onclick = () => react(e);
+  $("emos").append(b);
+}
+$("react").addEventListener("submit", e => { e.preventDefault(); react($("inSay").value); $("inSay").value = ""; });
+function confetti(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = $("confetti"), cols = ["#a8e6cf", "#ffcfb0", "#a7c7e7", "#f3e3a0", "#ff9aa2"];
+  for (let k = 0; k < 40; k++){
+    const p = document.createElement("i");
+    p.style.left = Math.random() * 100 + "%";
+    p.style.background = cols[k % cols.length];
+    p.style.animationDuration = 1.8 + Math.random() * 1.6 + "s";
+    p.style.animationDelay = Math.random() * 0.4 + "s";
+    box.append(p);
+  }
+  setTimeout(() => box.innerHTML = "", 4000);
+}
+// mensaje de espera con puntitos animados
+function waitText(msg){
+  $("waitMsg").textContent = msg;
+  const d = document.createElement("span"); d.className = "dots"; d.innerHTML = "<i></i><i></i><i></i>";
+  $("waitMsg").append(d);
+}
+
 function renderBoard(other){
   const used = new Set(S.used), over = S.phase === "done", meGuess = mySeat === S.guesser && !over;
   const max = S.max || 6, lost = S.errors >= max;
+  // qué letra es nueva desde lo último que se pintó (solo dentro de la misma ronda)
+  const sameRound = seen.word === S.word && seen.g === S.guesser;
+  const newL = sameRound ? S.used.filter(L => !seen.used.includes(L)) : [];
+  const last = newL[newL.length - 1];
+  const fresh = { last, miss: !!last && ![...S.word].some(c => norm(c) === last), won: sameRound && over && !lost && !seen.over };
+  seen = { word: S.word, g: S.guesser, used: [...S.used], over };
   $("word").innerHTML = "";
   for (const c of S.word){
     const i = document.createElement("i");
     if (c === " ") i.className = "sp";
     else if (shown(c)){ i.textContent = c; i.className = "sp"; }
-    else if (used.has(norm(c))) i.textContent = c.toUpperCase();
+    else if (used.has(norm(c))){ i.textContent = c.toUpperCase(); if (newL.includes(norm(c))) i.className = "pop"; }
     else if (over || mySeat !== S.guesser){ i.textContent = c.toUpperCase(); i.className = "miss"; } // quien la puso la ve en rojo
     $("word").append(i);
   }
@@ -307,6 +423,27 @@ function renderBoard(other){
   if (lost && !fig.classList.contains("dead")) fig.style.setProperty("--d", (order * 0.6 + 0.5) + "s"); // muere al acabar el último trazo
   fig.classList.toggle("dead", lost);
   $("lives").textContent = `Fallos: ${S.errors} de ${max} · adivina ${mySeat === S.guesser ? "tú" : other}`;
+  // vidas como corazones: se rompe uno con cada fallo
+  $("hearts").innerHTML = "";
+  for (let k = 0; k < max; k++){
+    const h = document.createElement("i"); h.textContent = "♥";
+    const gone = k >= max - S.errors;
+    if (gone) h.className = "lost" + (fresh.miss && k === max - S.errors ? " break" : "");
+    $("hearts").append(h);
+  }
+  // lo que acaba de pasar, en grande, para los dos (sobre todo para quien mira)
+  if (fresh.last){
+    const t = $("toast"), hit = !fresh.miss;
+    const who = mySeat === S.guesser ? "Tú" : other;
+    t.className = "toast" + (hit ? "" : " no");
+    t.innerHTML = "<b></b><span></span>";
+    t.querySelector("b").textContent = fresh.last;
+    t.querySelector("span").textContent = `${who}: ${hit ? "¡bien!" : "¡uy, no!"}`;
+    t.hidden = false; t.style.animation = "none"; void t.offsetHeight; t.style.animation = "";
+    clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 1700);
+    if (!hit){ const w = $("word"); w.classList.remove("shake"); void w.offsetWidth; w.classList.add("shake"); }
+  }
+  if (fresh.won) confetti();
   $("hint").textContent = "";
   if (S.hint){ const s = document.createElement("strong"); s.textContent = S.hint; $("hint").append("Pista: ", s); }
 
@@ -314,7 +451,7 @@ function renderBoard(other){
   for (const L of LETTERS){
     const b = document.createElement("button");
     b.type = "button"; b.textContent = L;
-    if (used.has(L)) b.className = [...S.word].some(c => norm(c) === L) ? "ok" : "no";
+    if (used.has(L)) b.className = ([...S.word].some(c => norm(c) === L) ? "ok" : "no") + (L === last ? " just" : "");
     b.disabled = !meGuess || used.has(L);
     b.onclick = () => act({ t: "guess", l: L });
     $("keys").append(b);
