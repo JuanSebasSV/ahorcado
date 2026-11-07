@@ -138,7 +138,9 @@ body.has-react{padding-bottom:150px}
   <div class="score" id="score" hidden>
     <div class="p" id="p0"><div><small id="t0"></small><b id="n0"></b></div><span id="s0">0</span></div>
     <div class="p" id="p1"><div><small id="t1"></small><b id="n1"></b></div><span id="s1">0</span></div>
+    <div class="p" id="p2" hidden><div><small id="t2"></small><b id="n2"></b></div><span id="s2">0</span></div>
   </div>
+  <button type="button" class="ghost" id="invite3" hidden>＋ Invitar a una tercera persona (opcional)</button>
   <p class="status" id="status"></p>
 
   <form class="card" id="vName" hidden>
@@ -159,7 +161,7 @@ body.has-react{padding-bottom:150px}
   </div>
 
   <div class="card" id="vChoose" hidden>
-    <h2>¿Quién adivina primero?</h2>
+    <h2>¿Quién empieza?</h2>
     <div class="row" id="pickA"></div>
   </div>
 
@@ -203,7 +205,7 @@ body.has-react{padding-bottom:150px}
     <p class="big" id="result"></p>
     <div class="keys" id="keys"></div>
     <div class="row" id="powers" hidden><button type="button" id="pwShake"></button><button type="button" id="pwShuffle"></button></div>
-    <div id="nextBox" hidden><p class="center">¿Quién adivina ahora?</p><div class="row" id="pickB"></div></div>
+    <div id="nextBox" hidden><p class="center">¿Quién va ahora?</p><div class="row" id="pickB"></div></div>
   </div>
 </div>
 <div id="confetti" aria-hidden="true"></div>
@@ -222,7 +224,13 @@ const PARTS = 10, LETTERS = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
 const $ = id => document.getElementById(id);
 let sala = new URLSearchParams(location.search).get("sala");
 if (sala && !/^ahorcado-[a-z0-9]{8,20}$/.test(sala)) sala = null;
-const FRESH = () => ({ v: 0, names: ["", ""], pts: [0, 0], guesser: 1, phase: "choose", word: "", hint: "", used: [], errors: 0, max: 6 });
+// 2 o 3 jugadores: uno pone la palabra (setter) y los demás adivinan por turnos, una letra cada uno (guesser = turno actual)
+const FRESH = () => ({ v: 0, names: ["", "", ""], pts: [0, 0, 0], setter: 0, guesser: 1, phase: "choose", word: "", hint: "", used: [], errors: 0, max: 6 });
+const players = s => [0, 1, 2].filter(i => s.names[i]);
+const guessers = s => players(s).filter(i => i !== s.setter);
+function nextG(s, from){ const g = guessers(s); if (!g.length) return from; const k = g.indexOf(from); return g[(k + 1) % g.length]; }
+const nameOf = i => (S && S.names[i]) || "Jugador " + (i + 1);
+const listNames = ids => ids.map(nameOf).join(" y ");
 let S = null, mySeat = null, myName = "", es = null, loadedTimer = null;
 
 const norm = c => { c = c.toUpperCase(); return c === "Ñ" ? c : c.normalize("NFD").replace(/[̀-ͯ]/g, ""); }; // la Ñ es letra propia
@@ -239,18 +247,23 @@ function apply(seat, a){
   if (!S) return;
   const s = structuredClone(S);
   if (a.t === "name"){ s.names[seat] = String(a.name).trim().slice(0, 16); }
-  else if (a.t === "secret" && s.phase === "secret" && seat === 1 - s.guesser && validWord(a.word)){
+  else if (a.t === "secret" && s.phase === "secret" && seat === s.setter && validWord(a.word)){
     const max = Math.min(10, Math.max(1, parseInt(a.max, 10) || 6));
-    Object.assign(s, { phase: "play", word: a.word, hint: String(a.hint || "").slice(0, 50), used: [], errors: 0, max });
+    Object.assign(s, { phase: "play", word: a.word, hint: String(a.hint || "").slice(0, 50), used: [], errors: 0, max, lastBy: null });
+    if (s.guesser === s.setter || !s.names[s.guesser]) s.guesser = nextG(s, s.setter);
   }
   else if (a.t === "guess" && s.phase === "play" && seat === s.guesser && LETTERS.includes(a.l) && !s.used.includes(a.l)){
-    s.used.push(a.l);
+    s.used.push(a.l); s.lastBy = seat;
     if (![...s.word].some(c => norm(c) === a.l)) s.errors++;
     const won = [...s.word].every(c => shown(c) || s.used.includes(norm(c)));
-    if (won || s.errors >= s.max){ s.phase = "done"; s.pts[won ? s.guesser : 1 - s.guesser]++; }
+    if (won || s.errors >= s.max){
+      s.phase = "done";
+      if (won) guessers(s).forEach(i => s.pts[i]++); else s.pts[s.setter]++; // adivinan: +1 cada uno; muere: +1 a quien la puso
+    } else s.guesser = nextG(s, seat); // turno del siguiente que adivina (con 2 jugadores no cambia)
   }
-  else if (a.t === "next" && (s.phase === "done" || s.phase === "choose") && (a.g === 0 || a.g === 1)){
-    Object.assign(s, { phase: "secret", guesser: a.g, word: "", hint: "", used: [], errors: 0 });
+  else if (a.t === "next" && (s.phase === "done" || s.phase === "choose") && players(s).includes(a.w)){
+    Object.assign(s, { phase: "secret", setter: a.w, word: "", hint: "", used: [], errors: 0 });
+    s.guesser = nextG(s, a.w);
   }
   else return;
   s.v = S.v + 1;
@@ -272,13 +285,20 @@ async function send(s, retry = true){
 }
 
 function valid(s){
-  return s && typeof s === "object" && Number.isInteger(s.v) && Array.isArray(s.names) && s.names.length === 2 &&
-    Array.isArray(s.pts) && Array.isArray(s.used) && (s.guesser === 0 || s.guesser === 1) &&
+  return s && typeof s === "object" && Number.isInteger(s.v) && Array.isArray(s.names) && s.names.length >= 2 && s.names.length <= 3 &&
+    Array.isArray(s.pts) && Array.isArray(s.used) && [0, 1, 2].includes(s.guesser) &&
     ["choose", "secret", "play", "done"].includes(s.phase) && (s.phase === "secret" || s.phase === "choose" || validWord(s.word));
+}
+// partidas guardadas con la versión de 2 jugadores
+function upgrade(s){
+  while (s.names.length < 3) s.names.push("");
+  while (s.pts.length < 3) s.pts.push(0);
+  if (![0, 1, 2].includes(s.setter)) s.setter = 1 - s.guesser;
+  return s;
 }
 function receive(s){
   if (!valid(s) || (S && s.v <= S.v)) return;
-  S = s; store("ahorcado-estado-" + sala, S); render();
+  S = upgrade(s); store("ahorcado-estado-" + sala, S); render();
 }
 
 /* ---------- conexión ---------- */
@@ -301,11 +321,11 @@ function connect(){
       const d = JSON.parse(m.message);
       // reacción: solo si es reciente (al conectar se repiten los mensajes guardados) y no es mía
       if (d && (d.p === "shake" || d.p === "shuffle")){
-        if (!myReacts.has(d.id) && Date.now() / 1000 - m.time < 15 && S && S.phase === "play" && mySeat === S.guesser) applyPower(d.p);
+        if (!myReacts.has(d.id) && Date.now() / 1000 - m.time < 15 && S && S.phase === "play" && mySeat !== S.setter && [0, 1, 2].includes(d.from)) applyPower(d.p, d.from);
         return;
       }
       if (d && typeof d.r === "string"){
-        if (!myReacts.has(d.id) && Date.now() / 1000 - m.time < 15 && (d.from === 0 || d.from === 1)) floatUp(d.r.slice(0, 60), d.from);
+        if (!myReacts.has(d.id) && Date.now() / 1000 - m.time < 15 && [0, 1, 2].includes(d.from)) floatUp(d.r.slice(0, 60), d.from);
         return;
       }
       receive(d);
@@ -314,8 +334,13 @@ function connect(){
   // tras recibir lo guardado: si mi copia es más nueva (o el servidor ya la borró), la vuelvo a subir; y me apunto con mi nombre
   loadedTimer = setTimeout(() => {
     const local = load("ahorcado-estado-" + sala);
-    if (valid(local) && (!S || local.v > S.v)){ S = local; render(); send(S); }
+    if (valid(local) && (!S || local.v > S.v)){ S = upgrade(local); render(); send(S); }
     if (!S){ status(""); $("waitMsg").textContent = "Esta partida ya no existe. Pide un enlace nuevo."; show("vWait"); return; }
+    if (mySeat === -1){ // recién llegado: mismo nombre que un hueco, o el primer hueco libre
+      const seat = [1, 2].find(i => S.names[i] === myName) ?? [1, 2].find(i => !S.names[i]);
+      if (seat === undefined){ $("waitMsg").textContent = "Esta partida ya tiene 3 jugadores."; show("vWait"); return; }
+      mySeat = seat; store("ahorcado-puesto-" + sala, mySeat);
+    }
     if (S.names[mySeat] !== myName) act({ t: "name", name: myName });
   }, 2500);
 }
@@ -325,20 +350,24 @@ function show(v){ for (const id of ["vName","vInvite","vChoose","vSecret","vWait
 
 function render(){
   if (mySeat === null){ $("score").hidden = true; return show("vName"); }
+  if (mySeat === -1 && S){ $("score").hidden = true; $("waitMsg").textContent = "Entrando en la partida…"; return show("vWait"); }
   if (!S){ $("score").hidden = true; $("waitMsg").textContent = "Cargando la partida…"; return show("vWait"); }
   $("score").hidden = false;
-  const reacting = !!S.names[1] && !(S.phase === "secret" && mySeat === 1 - S.guesser); // no tapa el formulario de la palabra
+  const n = players(S).length;
+  const reacting = n >= 2 && !(S.phase === "secret" && mySeat === S.setter); // no tapa el formulario de la palabra
   $("react").hidden = !reacting; document.body.classList.toggle("has-react", reacting);
-  for (const i of [0, 1]){
+  $("score").style.gridTemplateColumns = `repeat(${S.names[2] ? 3 : 2},1fr)`;
+  $("p2").hidden = !S.names[2];
+  $("invite3").hidden = n !== 2;
+  for (const i of [0, 1, 2]){
     $("n"+i).textContent = S.names[i] || "—";
     $("t"+i).innerHTML = "";
     const d = document.createElement("i"); d.className = "dot" + (S.names[i] ? " live" : "");
     $("t"+i).append(d, `Jugador ${i + 1}${i === mySeat ? " · tú" : ""}`);
     $("s"+i).textContent = S.pts[i];
-    $("p"+i).classList.toggle("on", i === S.guesser);
+    $("p"+i).classList.toggle("on", S.phase === "play" && i === S.guesser);
   }
-  const other = S.names[1 - mySeat] || "tu pareja";
-  if (mySeat === 0 && !S.names[1]){
+  if (mySeat === 0 && n < 2){
     const url = location.origin + location.pathname + "?sala=" + sala;
     $("link").value = url;
     $("wa").href = "https://wa.me/?text=" + encodeURIComponent("¿Jugamos al ahorcado? Entra aquí: " + url);
@@ -346,14 +375,14 @@ function render(){
   }
   if (S.phase === "choose"){ picks($("pickA")); return show("vChoose"); }
   if (S.phase === "secret"){
-    if (mySeat === 1 - S.guesser){
-      $("secretTitle").textContent = `Te toca escribir la palabra para ${other}`;
+    if (mySeat === S.setter){
+      $("secretTitle").textContent = `Te toca escribir la palabra para ${listNames(guessers(S))}`;
       return show("vSecret");
     }
-    waitText(`${other} está escribiendo la palabra secreta`);
+    waitText(`${nameOf(S.setter)} está escribiendo la palabra secreta`);
     return show("vWait");
   }
-  renderBoard(other); show("vPlay");
+  renderBoard(); show("vPlay");
 }
 
 let seen = { word: null, g: null, used: [], over: false };
@@ -391,9 +420,9 @@ for (const e of EMOS){
 // cada poder se usa UNA vez por ronda, cuando quieras; al usar uno, el otro queda bloqueado 2 minutos
 const LOCK = 2 * 60000, OTHER = { shake: "shuffle", shuffle: "shake" };
 let pw = null, quakeUntil = 0, shuffleUntil = 0, keyOrder = LETTERS;
-const roundId = () => `${S.pts[0] + S.pts[1]}|${S.guesser}|${S.word}`;
+const roundId = () => `${S.pts.join(",")}|${S.setter}|${S.word}`;
 function powersTick(){
-  const spect = !!S && S.phase === "play" && mySeat !== S.guesser;
+  const spect = !!S && S.phase === "play" && mySeat === S.setter;
   $("powers").hidden = !spect;
   if (!spect) return;
   if (!pw) pw = load("ahorcado-poderes2-" + sala); // guardado para que recargar no devuelva los usos
@@ -412,7 +441,7 @@ function setPw(b, label, p, now){
 setInterval(powersTick, 1000);
 function usePower(p){
   const now = Date.now();
-  if (!pw || pw.used[p] || pw.lock[p] > now || !S || S.phase !== "play" || mySeat === S.guesser) return;
+  if (!pw || pw.used[p] || pw.lock[p] > now || !S || S.phase !== "play" || mySeat !== S.setter) return;
   pw.used[p] = true; pw.lock[OTHER[p]] = now + LOCK; store("ahorcado-poderes2-" + sala, pw);
   const id = Math.random().toString(36).slice(2, 10);
   myReacts.add(id);
@@ -422,19 +451,19 @@ function usePower(p){
 }
 $("pwShake").onclick = () => usePower("shake");
 $("pwShuffle").onclick = () => usePower("shuffle");
-function applyPower(p){
+function applyPower(p, from){
   if (p === "shake"){
     quakeUntil = Date.now() + 5000;
     document.body.classList.remove("quake"); void document.body.offsetWidth; document.body.classList.add("quake");
     setTimeout(() => { if (Date.now() >= quakeUntil) document.body.classList.remove("quake"); }, 5050);
-    floatUp("🌪️ ¡Te están sacudiendo la pantalla!", 1 - mySeat);
+    floatUp("🌪️ ¡Te están sacudiendo la pantalla!", from);
   } else {
     shuffleUntil = Date.now() + 30000;
     keyOrder = [...LETTERS];
     for (let i = keyOrder.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [keyOrder[i], keyOrder[j]] = [keyOrder[j], keyOrder[i]]; }
     render();
     setTimeout(() => { if (Date.now() >= shuffleUntil) render(); }, 30050);
-    floatUp("🔀 ¡Te desordenaron las letras 30 segundos!", 1 - mySeat);
+    floatUp("🔀 ¡Te desordenaron las letras 30 segundos!", from);
   }
 }
 // durante la sacudida, 4 de cada 10 toques caen en la tecla de al lado
@@ -468,22 +497,22 @@ function waitText(msg){
   $("waitMsg").append(d);
 }
 
-function renderBoard(other){
+function renderBoard(){
   const used = new Set(S.used), over = S.phase === "done", meGuess = mySeat === S.guesser && !over;
   const max = S.max || 6, lost = S.errors >= max;
   // qué letra es nueva desde lo último que se pintó (solo dentro de la misma ronda)
-  const sameRound = seen.word === S.word && seen.g === S.guesser;
+  const sameRound = seen.word === S.word && seen.g === S.setter;
   const newL = sameRound ? S.used.filter(L => !seen.used.includes(L)) : [];
   const last = newL[newL.length - 1];
   const fresh = { last, miss: !!last && ![...S.word].some(c => norm(c) === last), won: sameRound && over && !lost && !seen.over };
-  seen = { word: S.word, g: S.guesser, used: [...S.used], over };
+  seen = { word: S.word, g: S.setter, used: [...S.used], over };
   $("word").innerHTML = "";
   for (const c of S.word){
     const i = document.createElement("i");
     if (c === " ") i.className = "sp";
     else if (shown(c)){ i.textContent = c; i.className = "sp"; }
     else if (used.has(norm(c))){ i.textContent = c.toUpperCase(); if (newL.includes(norm(c))) i.className = "pop"; }
-    else if (over || mySeat !== S.guesser){ i.textContent = c.toUpperCase(); i.className = "miss"; } // quien la puso la ve en rojo
+    else if (over || mySeat === S.setter){ i.textContent = c.toUpperCase(); i.className = "miss"; } // quien la puso la ve en rojo
     $("word").append(i);
   }
   // como en papel: empieza en blanco y cada fallo dibuja los siguientes trazos (suelo, palo, viga, cuerda, cabeza…);
@@ -498,7 +527,7 @@ function renderBoard(other){
   const fig = $("fig");
   if (lost && !fig.classList.contains("dead")) fig.style.setProperty("--d", (order * 0.6 + 0.5) + "s"); // muere al acabar el último trazo
   fig.classList.toggle("dead", lost);
-  $("lives").textContent = `Adivina ${mySeat === S.guesser ? "tú" : other}`;
+  $("lives").textContent = over ? `La puso ${mySeat === S.setter ? "tú" : nameOf(S.setter)}` : `Turno de ${mySeat === S.guesser ? "ti" : nameOf(S.guesser)}`;
   // contador: letras elegidas en total y fallos
   $("counter").innerHTML = "<span>Letras dichas: <b></b></span><span class=\"bad\">Fallos: <b></b></span>";
   const cb = $("counter").querySelectorAll("b");
@@ -514,7 +543,7 @@ function renderBoard(other){
   // lo que acaba de pasar, en grande, para los dos (sobre todo para quien mira)
   if (fresh.last){
     const t = $("toast"), hit = !fresh.miss;
-    const who = mySeat === S.guesser ? "Tú" : other;
+    const who = S.lastBy === mySeat ? "Tú" : nameOf(S.lastBy ?? S.guesser);
     t.className = "toast" + (hit ? "" : " no");
     t.innerHTML = "<b></b><span></span>";
     t.querySelector("b").textContent = fresh.last;
@@ -536,10 +565,12 @@ function renderBoard(other){
     b.onclick = () => press(L);
     $("keys").append(b);
   }
-  const winnerMe = (lost ? 1 - S.guesser : S.guesser) === mySeat;
+  const gs = guessers(S), many = gs.length > 1;
   $("result").textContent = over
-    ? (lost ? (winnerMe ? "¡Se murió el muñequito! +1 para ti" : `¡Se murió el muñequito! +1 para ${other}`) : (winnerMe ? "¡La adivinaste! +1" : `¡${other} la adivinó! +1`))
-    : (meGuess ? "" : `${other} está adivinando…`);
+    ? (lost
+        ? (mySeat === S.setter ? "¡Se murió el muñequito! +1 para ti" : `¡Se murió el muñequito! +1 para ${nameOf(S.setter)}`)
+        : (mySeat === S.setter ? `¡${listNames(gs)} la ${many ? "adivinaron" : "adivinó"}! +1${many ? " cada uno" : ""}` : (many ? "¡La adivinaron! +1 para cada uno" : "¡La adivinaste! +1")))
+    : (meGuess ? "" : `${nameOf(S.guesser)} está adivinando…`);
   $("nextBox").hidden = !over;
   powersTick();
   if (over) picks($("pickB"));
@@ -557,8 +588,8 @@ $("vName").addEventListener("submit", e => {
     mySeat = 0;
     S = FRESH(); S.names[0] = myName; S.v = 1;
     store("ahorcado-estado-" + sala, S); send(S);
-  } else mySeat = 1;
-  store("ahorcado-puesto-" + sala, mySeat);
+    store("ahorcado-puesto-" + sala, mySeat);
+  } else mySeat = -1; // el puesto (2.º o 3.º) se decide al cargar la partida
   render(); connect();
 });
 
@@ -571,16 +602,24 @@ $("vSecret").addEventListener("submit", e => {
   $("secretErr").textContent = ""; $("inWord").value = ""; $("inHint").value = ""; document.querySelector(".extra").open = false;
   act({ t: "secret", word: w, hint, max });
 });
-// botones "Adivina X": cualquiera de los dos elige quién adivina la siguiente
+// cualquiera elige: con 2, "Adivina X" (el otro pone la palabra); con 3, "Pone la palabra X" (los otros dos adivinan)
 function picks(box){
   box.innerHTML = "";
-  for (const g of [0, 1]){
-    const b = document.createElement("button");
-    b.type = "button"; b.textContent = "Adivina " + (g === mySeat ? "yo" : (S.names[g] || "Jugador " + (g + 1)));
-    b.onclick = () => act({ t: "next", g });
+  const ps = players(S);
+  box.style.gridTemplateColumns = `repeat(${ps.length},1fr)`;
+  for (const i of ps){
+    const b = document.createElement("button"), me = i === mySeat ? "yo" : nameOf(i);
+    b.type = "button";
+    if (ps.length === 2){ b.textContent = "Adivina " + me; b.onclick = () => act({ t: "next", w: ps.find(x => x !== i) }); }
+    else { b.textContent = "Pone la palabra: " + me; b.onclick = () => act({ t: "next", w: i }); }
     box.append(b);
   }
 }
+$("invite3").onclick = async () => {
+  const url = location.origin + location.pathname + "?sala=" + sala;
+  try { if (navigator.share) await navigator.share({ text: "¿Te unes al ahorcado?", url }); else { await navigator.clipboard.writeText(url); $("invite3").textContent = "¡Enlace copiado!"; setTimeout(() => $("invite3").textContent = "＋ Invitar a una tercera persona (opcional)", 2000); } }
+  catch {}
+};
 $("copy").onclick = async () => {
   try { await navigator.clipboard.writeText($("link").value); $("copy").textContent = "¡Copiado!"; }
   catch { $("link").select(); $("copy").textContent = "Cópialo a mano"; }
@@ -599,7 +638,7 @@ $("inName").value = myName;
 if (sala){
   $("nameTitle").textContent = "Te han invitado a jugar"; $("nameBtn").textContent = "Entrar a jugar";
   const seat = load("ahorcado-puesto-" + sala);
-  if ((seat === 0 || seat === 1) && myName){ mySeat = seat; connect(); }
+  if ([0, 1, 2].includes(seat) && myName){ mySeat = seat; connect(); }
 }
 render();
 </script>
