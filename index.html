@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ahorcado a dos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Nunito:wght@400;700;800&display=swap">
+<style>
+:root{
+  --bg:#1f3a33; --board:#264840; --chalk:#eef3ee; --dim:#a9bdb4; --yellow:#f3d36b; --red:#f08a7a; --line:#4d6f66;
+  --display:"Gochi Hand","Comic Sans MS",cursive; --body:"Nunito",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%;margin:0}
+body{background:var(--bg);color:var(--chalk);font-family:var(--body);font-size:16px;-webkit-tap-highlight-color:transparent;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(1.8rem,8vw,2.6rem);margin:0;text-align:center}
+.score{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-variant-numeric:tabular-nums}
+.p{min-width:0;background:var(--board);border-radius:10px;padding:8px 12px;border:2px solid transparent;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.p.on{border-color:var(--yellow)}
+.p div{min-width:0}
+.p b{display:block;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p small{display:block;font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.p span{font-family:var(--display);font-size:1.9rem;line-height:1}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--line);margin-right:4px;vertical-align:middle}
+.dot.live{background:#7fd99a}
+.card{background:var(--board);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-family:var(--display);font-weight:400;font-size:1.6rem;margin:0;text-wrap:balance}
+label{font-weight:700;font-size:.9rem;color:var(--dim);display:flex;flex-direction:column;gap:6px}
+input{font:inherit;font-size:17px;padding:12px;border-radius:8px;border:2px solid var(--line);background:var(--bg);color:var(--chalk);width:100%}
+input:focus{outline:none;border-color:var(--yellow)}
+input[readonly]{font-size:14px;color:var(--dim)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button,.btn{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:10px;padding:14px 16px;min-height:48px;background:var(--yellow);color:#2a2a1a;touch-action:manipulation;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+button:focus-visible,.btn:focus-visible{outline:3px solid var(--chalk);outline-offset:2px}
+.ghost{background:transparent;color:var(--dim);border:2px solid var(--line)}
+.err{color:var(--red);font-weight:700;margin:0}
+.err:empty{display:none}
+svg{width:100%;max-width:min(200px,42vw);margin:0 auto;display:block}
+svg *{stroke:var(--chalk);stroke-width:5;stroke-linecap:round;fill:none}
+.part{opacity:0;transition:opacity .3s}.part.show{opacity:1}
+.word{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 5px;font-family:var(--display);font-size:clamp(1.5rem,7.5vw,2.2rem)}
+.word i{font-style:normal;width:1.05em;text-align:center;border-bottom:3px solid var(--chalk);line-height:1.2}
+.word i.sp{border:0;width:.5em}
+.word i.miss{color:var(--red)}
+.hint,.lives,.center{text-align:center;color:var(--dim);margin:0}
+.hint strong{color:var(--yellow)}
+.lives{font-variant-numeric:tabular-nums;font-size:.9rem}
+.keys{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.keys button{padding:0;min-height:46px;font-size:1.15rem;background:var(--chalk);color:#1f3a33;border-radius:8px}
+.keys button.ok{background:var(--yellow)}
+.keys button.no{background:transparent;color:var(--dim);border:2px solid var(--line);text-decoration:line-through}
+.keys button:disabled{cursor:default}
+.keys.wait button:not(.ok):not(.no){opacity:.4}
+.big{font-family:var(--display);font-size:1.7rem;text-align:center;margin:0;text-wrap:balance}
+.big:empty{display:none}
+.wait-msg{font-family:var(--display);font-size:1.5rem;text-align:center;margin:0;color:var(--yellow);text-wrap:balance}
+.status{text-align:center;color:var(--dim);font-size:.9rem;margin:0}
+.status:empty{display:none}
+@media (min-width:600px){.keys{grid-template-columns:repeat(9,1fr)}.card{padding:20px}}
+@media (prefers-reduced-motion:reduce){.part{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ahorcado a dos</h1>
+  <div class="score" id="score" hidden>
+    <div class="p" id="p0"><div><small id="t0"></small><b id="n0"></b></div><span id="s0">0</span></div>
+    <div class="p" id="p1"><div><small id="t1"></small><b id="n1"></b></div><span id="s1">0</span></div>
+  </div>
+  <p class="status" id="status"></p>
+
+  <form class="card" id="vName" hidden>
+    <h2 id="nameTitle">Crear partida</h2>
+    <label for="inName">Tu nombre<input id="inName" maxlength="16" autocomplete="off" placeholder="Ej.: Ana"></label>
+    <p class="err" id="nameErr"></p>
+    <button type="submit" id="nameBtn">Crear partida</button>
+  </form>
+
+  <div class="card" id="vInvite" hidden>
+    <h2>Mándale este enlace</h2>
+    <input id="link" readonly aria-label="Enlace de la partida">
+    <div class="row">
+      <button type="button" id="copy">Copiar enlace</button>
+      <a class="btn ghost" id="wa" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+    </div>
+    <p class="wait-msg">Esperando a que entre…</p>
+  </div>
+
+  <form class="card" id="vSecret" hidden>
+    <h2 id="secretTitle"></h2>
+    <label for="inWord">Tu palabra o frase (espacios, guiones y signos se verán tal cual)<input id="inWord" type="password" maxlength="40" autocomplete="off"></label>
+    <label for="inHint">Pista (opcional)<input id="inHint" maxlength="50" autocomplete="off" placeholder="Ej.: un animal"></label>
+    <p class="err" id="secretErr"></p>
+    <button type="submit">Listo, ¡a adivinar!</button>
+  </form>
+
+  <div class="card" id="vWait" hidden><p class="wait-msg" id="waitMsg"></p></div>
+
+  <div class="card" id="vPlay" hidden>
+    <svg viewBox="0 0 200 200" aria-label="Dibujo del ahorcado">
+      <path d="M20 190H120M50 190V15H130V35"/>
+      <circle class="part" cx="130" cy="50" r="15"/>
+      <path class="part" d="M130 65V120"/>
+      <path class="part" d="M130 80L108 102"/>
+      <path class="part" d="M130 80L152 102"/>
+      <path class="part" d="M130 120L110 155"/>
+      <path class="part" d="M130 120L150 155"/>
+    </svg>
+    <p class="lives" id="lives"></p>
+    <p class="hint" id="hint"></p>
+    <div class="word" id="word" aria-live="polite"></div>
+    <p class="big" id="result"></p>
+    <div class="keys" id="keys"></div>
+    <button type="button" id="next" hidden>Siguiente turno</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<script>
+/* Conexión directa entre los dos dispositivos (WebRTC vía PeerJS).
+   Quien crea la partida (jugador 1) guarda el estado y lo reenvía; quien entra por el enlace (jugador 2) manda sus jugadas. */
+const MAX = 6, LETTERS = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
+const $ = id => document.getElementById(id);
+const sala = new URLSearchParams(location.search).get("sala");
+const isHost = !sala, mySeat = isHost ? 0 : 1;
+const FRESH = () => ({ names: ["", ""], pts: [0, 0], guesser: 1, phase: "secret", word: "", hint: "", used: [], errors: 0, online: false });
+let S = null, peer = null, conn = null, myName = "";
+
+const norm = c => { c = c.toUpperCase(); return c === "Ñ" ? c : c.normalize("NFD").replace(/[̀-ͯ]/g, ""); }; // la Ñ es letra propia
+const isLetter = c => LETTERS.includes(norm(c));
+// letras se adivinan; espacios, números y signos (- , ¿ ? !) se ven desde el principio
+const validWord = w => typeof w === "string" && w.length <= 40 && [...w].some(isLetter) && !/[\u0000-\u001f<>]/.test(w);
+const shown = c => !isLetter(c);
+const status = t => $("status").textContent = t;
+const store = (k, v) => { try { v === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+
+/* ---------- reglas (solo las aplica el anfitrión) ---------- */
+function apply(seat, a){
+  if (!a || typeof a !== "object") return;
+  const s = { ...S };
+  if (a.t === "name" && typeof a.name === "string"){ s.names = [...s.names]; s.names[seat] = a.name.trim().slice(0, 16); }
+  else if (a.t === "secret" && s.phase === "secret" && seat === 1 - s.guesser && validWord(a.word)){
+    Object.assign(s, { phase: "play", word: a.word, hint: String(a.hint || "").slice(0, 50), used: [], errors: 0 });
+  }
+  else if (a.t === "guess" && s.phase === "play" && seat === s.guesser && LETTERS.includes(a.l) && !s.used.includes(a.l)){
+    s.used = [...s.used, a.l];
+    const hit = [...s.word].some(c => norm(c) === a.l);
+    s.errors += hit ? 0 : 1;
+    const won = [...s.word].every(c => shown(c) || s.used.includes(norm(c)));
+    if (won || s.errors >= MAX){ s.phase = "done"; s.pts = [...s.pts]; s.pts[won ? s.guesser : 1 - s.guesser]++; }
+  }
+  else if (a.t === "next" && s.phase === "done"){
+    Object.assign(s, { phase: "secret", guesser: 1 - s.guesser, word: "", hint: "", used: [], errors: 0 });
+  }
+  else return;
+  S = s; hostSync();
+}
+function hostSync(){
+  S.online = !!(conn && conn.open);
+  store("ahorcado-estado", S);
+  if (conn && conn.open) conn.send({ t: "state", s: S });
+  render();
+}
+function act(a){
+  if (isHost) apply(0, a);
+  else if (conn && conn.open) conn.send(a);
+  else status("Sin conexión: espera a que se reconecte.");
+}
+
+/* ---------- conexión ---------- */
+function startHost(){
+  let id = load("ahorcado-sala");
+  if (!id){ id = "ahorcado-" + Math.random().toString(36).slice(2, 10); store("ahorcado-sala", id); }
+  const url = location.origin + location.pathname + "?sala=" + encodeURIComponent(id);
+  $("link").value = url;
+  $("wa").href = "https://wa.me/?text=" + encodeURIComponent("¿Jugamos al ahorcado? Entra aquí: " + url);
+  status("Conectando…");
+  peer = new Peer(id);
+  peer.on("open", () => { status(""); render(); });
+  peer.on("connection", c => {
+    if (conn && conn !== c) conn.close(); // solo una pareja; si vuelve a entrar, sustituye a la anterior
+    conn = c;
+    c.on("open", hostSync);
+    c.on("data", a => apply(1, a));
+    c.on("close", () => { if (conn === c){ conn = null; hostSync(); } });
+  });
+  peer.on("disconnected", () => setTimeout(() => !peer.destroyed && peer.reconnect(), 2000));
+  peer.on("error", e => {
+    if (e.type === "unavailable-id"){ status("Recuperando la partida…"); peer.destroy(); setTimeout(startHost, 4000); }
+    else if (e.type === "network" || e.type === "server-error" || e.type === "socket-error") status("Problema de red. Reintentando…");
+  });
+}
+
+function startGuest(){
+  status("Conectando con la partida…");
+  peer = new Peer();
+  peer.on("open", connectGuest);
+  peer.on("disconnected", () => setTimeout(() => !peer.destroyed && peer.reconnect(), 2000));
+  peer.on("error", e => {
+    if (e.type === "peer-unavailable"){ status("La otra persona no tiene la partida abierta. Reintentando…"); setTimeout(connectGuest, 4000); }
+    else if (e.type === "network" || e.type === "server-error" || e.type === "socket-error") status("Problema de red. Reintentando…");
+  });
+}
+function connectGuest(){
+  if (peer.destroyed || peer.disconnected) return;
+  const c = peer.connect(sala, { reliable: true });
+  c.on("open", () => { conn = c; status(""); c.send({ t: "name", name: myName }); });
+  c.on("data", m => { if (m && m.t === "state" && m.s){ S = m.s; render(); } });
+  c.on("close", () => { if (conn === c){ conn = null; status("Se cortó la conexión. Reconectando…"); setTimeout(connectGuest, 2000); } });
+}
+
+/* ---------- pantalla ---------- */
+function show(v){ for (const id of ["vName","vInvite","vSecret","vWait","vPlay"]) $(id).hidden = id !== v; }
+
+function render(){
+  if (!myName){ $("score").hidden = true; return show("vName"); }
+  if (!S){ $("score").hidden = true; $("waitMsg").textContent = "Conectando con la partida…"; return show("vWait"); }
+  $("score").hidden = false;
+  const otherOnline = isHost ? !!(conn && conn.open) : !!(conn && conn.open);
+  for (const i of [0, 1]){
+    $("n"+i).textContent = S.names[i] || "—";
+    const live = i === mySeat || otherOnline;
+    $("t"+i).innerHTML = "";
+    const d = document.createElement("i"); d.className = "dot" + (live ? " live" : "");
+    $("t"+i).append(d, `Jugador ${i + 1}${i === mySeat ? " · tú" : ""}`);
+    $("s"+i).textContent = S.pts[i];
+    $("p"+i).classList.toggle("on", i === S.guesser);
+  }
+  const other = S.names[1 - mySeat] || "tu pareja";
+  if (isHost && !S.names[1] && !otherOnline) return show("vInvite");
+
+  if (S.phase === "secret"){
+    if (mySeat === 1 - S.guesser){
+      $("secretTitle").textContent = `Te toca escribir la palabra para ${other}`;
+      return show("vSecret");
+    }
+    $("waitMsg").textContent = otherOnline ? `${other} está escribiendo la palabra secreta…` : `Esperando a que ${other} vuelva a entrar…`;
+    return show("vWait");
+  }
+  renderBoard(other); show("vPlay");
+}
+
+function renderBoard(other){
+  const used = new Set(S.used), over = S.phase === "done", meGuess = mySeat === S.guesser && !over;
+  const lost = S.errors >= MAX;
+  $("word").innerHTML = "";
+  for (const c of S.word){
+    const i = document.createElement("i");
+    if (c === " ") i.className = "sp";
+    else if (shown(c)){ i.textContent = c; i.className = "sp"; }
+    else if (used.has(norm(c))) i.textContent = c.toUpperCase();
+    else if (over || mySeat !== S.guesser){ i.textContent = c.toUpperCase(); i.className = "miss"; } // quien la puso la ve en rojo
+    $("word").append(i);
+  }
+  document.querySelectorAll(".part").forEach((p, k) => p.classList.toggle("show", k < S.errors));
+  $("lives").textContent = `Fallos: ${S.errors} de ${MAX} · adivina ${mySeat === S.guesser ? "tú" : other}`;
+  $("hint").textContent = "";
+  if (S.hint){ const s = document.createElement("strong"); s.textContent = S.hint; $("hint").append("Pista: ", s); }
+
+  $("keys").innerHTML = ""; $("keys").classList.toggle("wait", !meGuess); $("keys").hidden = over;
+  for (const L of LETTERS){
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = L;
+    if (used.has(L)) b.className = [...S.word].some(c => norm(c) === L) ? "ok" : "no";
+    b.disabled = !meGuess || used.has(L);
+    b.onclick = () => act({ t: "guess", l: L });
+    $("keys").append(b);
+  }
+  const winnerMe = (lost ? 1 - S.guesser : S.guesser) === mySeat;
+  $("result").textContent = over
+    ? (lost ? (winnerMe ? "¡Ahorcado! +1 para ti" : `¡Ahorcado! +1 para ${other}`) : (winnerMe ? "¡La adivinaste! +1" : `¡${other} la adivinó! +1`))
+    : (meGuess ? "" : `${other} está adivinando…`);
+  $("next").hidden = !over;
+}
+
+$("vName").addEventListener("submit", e => {
+  e.preventDefault();
+  const n = $("inName").value.trim();
+  if (!n) return $("nameErr").textContent = "Escribe tu nombre.";
+  $("nameErr").textContent = "";
+  myName = n.slice(0, 16); store("ahorcado-nombre", myName);
+  if (isHost){
+    S = load("ahorcado-estado") || FRESH();
+    S.names = [myName, S.names[1] || ""];
+    startHost(); hostSync();
+  } else { render(); startGuest(); }
+});
+
+$("vSecret").addEventListener("submit", e => {
+  e.preventDefault();
+  const w = $("inWord").value.trim().replace(/\s+/g, " ");
+  if (![...w].some(isLetter)) return $("secretErr").textContent = "Escribe al menos una letra.";
+  if (!validWord(w)) return $("secretErr").textContent = "Máximo 40 caracteres y sin < ni >.";
+  const hint = $("inHint").value.trim();
+  $("secretErr").textContent = ""; $("inWord").value = ""; $("inHint").value = "";
+  act({ t: "secret", word: w, hint });
+});
+$("next").onclick = () => act({ t: "next" });
+$("copy").onclick = async () => {
+  try { await navigator.clipboard.writeText($("link").value); $("copy").textContent = "¡Copiado!"; }
+  catch { $("link").select(); $("copy").textContent = "Cópialo a mano"; }
+  setTimeout(() => $("copy").textContent = "Copiar enlace", 2000);
+};
+
+document.addEventListener("keydown", e => {
+  if ($("vPlay").hidden || e.ctrlKey || e.metaKey || e.altKey || e.target.tagName === "INPUT") return;
+  const k = e.key.toUpperCase();
+  if (LETTERS.includes(k)) act({ t: "guess", l: k });
+});
+
+// arranque
+if (!isHost){ $("nameTitle").textContent = "Te han invitado a jugar"; $("nameBtn").textContent = "Entrar a jugar"; }
+const saved = load("ahorcado-nombre");
+if (saved){ $("inName").value = saved; }
+if (typeof Peer === "undefined"){ status("No se pudo cargar el juego. Revisa tu conexión y recarga."); }
+render();
+</script>
+</body>
+</html>
