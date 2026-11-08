@@ -673,6 +673,17 @@ body.has-react{padding-bottom:80px}
 </form>
 
 <script>
+// si GitHub Pages sirve una copia vieja guardada en el navegador, se recarga sola con la versión nueva (la partida se mantiene)
+const BUILD = "1794099669";
+async function checkBuild(){
+  try {
+    const t = await (await fetch(location.pathname + "?b=" + Date.now(), { cache: "no-store" })).text();
+    const m = t.match(/const BUILD = "(\d+)"/);
+    if (m && m[1] !== BUILD && sessionStorage.getItem("ahorcado-build") !== m[1]){ sessionStorage.setItem("ahorcado-build", m[1]); location.reload(); }
+  } catch {}
+}
+checkBuild();
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkBuild(); });
 /* La partida vive en ntfy.sh (mensajería gratuita por HTTPS, sin cuentas): cada jugada publica el estado entero
    con un número de versión, y todos se quedan con la versión más alta. Guarda los mensajes 12 h, así que la
    partida sigue aunque los dos cierren el juego; además cada móvil guarda su copia y la vuelve a subir si hace falta. */
