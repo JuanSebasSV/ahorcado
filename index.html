@@ -808,7 +808,7 @@ function render(){
   const theme = (S.phase === "play" || S.phase === "done") ? S.roundSkin : S.skin;
   document.body.classList.toggle("xmas", theme === "nieve"); document.body.classList.toggle("love", theme === "perro");
   const n = players(S).length;
-  const reacting = n >= 2 && !(S.phase === "secret" && mySeat === S.setter) && !(S.phase === "play" && mySeat !== S.setter); // emojis y frases solo para el espectador mientras se adivina
+  const reacting = n >= 2 && S.phase === "play" && mySeat === S.setter; // emojis y frases: solo quien puso la palabra y solo mientras se adivina
   $("react").hidden = !reacting; document.body.classList.toggle("has-react", reacting);
   $("score").style.gridTemplateColumns = `repeat(${S.names[2] ? 3 : 2},1fr)`;
   $("p2").hidden = !S.names[2];
@@ -847,7 +847,7 @@ const myReacts = new Set();
 let lastReact = 0;
 function react(r){
   r = String(r).trim().slice(0, 60);
-  if (!r || !sala || mySeat === null || (S && S.phase === "play" && mySeat !== S.setter)) return;
+  if (!r || !sala || mySeat === null || !S || S.phase !== "play" || mySeat !== S.setter) return;
   const now = Date.now();
   if (now - lastReact < 1200) return; // sin spam: ntfy limita los envíos
   lastReact = now;
