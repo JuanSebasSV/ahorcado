@@ -146,7 +146,7 @@ body.quake .wrap{animation:quake .22s linear infinite}
 #snow .rip{opacity:0;transform:translateY(8px);transition:opacity .6s,transform .6s}
 #snow.dead .rip{opacity:1;transform:none;transition-delay:calc(var(--d,0s) + 1s)}
 /* selector de muñequito */
-.skins{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.skins{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .skin{flex-direction:column;gap:4px;background:var(--key);color:var(--chalk);border:2px solid transparent;padding:10px 8px;font-weight:700}
 .skin svg{width:46px;height:46px;display:block}
 .skin.sel{border-color:var(--yellow);background:#2e3a4b}
@@ -171,6 +171,165 @@ body.xmas .lights{display:flex}
 .lights i:nth-child(4n+1){color:#ff6b6b}.lights i:nth-child(4n+2){color:#ffd93d;animation-delay:.4s}.lights i:nth-child(4n+3){color:#6bcb77;animation-delay:.8s}.lights i:nth-child(4n){color:#4d96ff;animation-delay:1.2s}
 @keyframes blink{0%,100%{opacity:1;box-shadow:0 0 9px currentColor}50%{opacity:.35;box-shadow:none}}
 @media (prefers-reduced-motion:reduce){#snowfall,#snow .sleigh{display:none}#snow .flakes circle,.lights i{animation:none}}
+
+/* ---- perrito: camina en el sitio mientras el parque pasa; cada fallo, una desgracia ---- */
+#pup{width:100%;max-width:min(270px,72vw);display:block;margin:0 auto;border-radius:18px;box-shadow:0 8px 22px rgba(0,0,0,.35);--w:1}
+#pup .scroll{animation:scrollX linear infinite}
+#pup .far{animation-duration:calc(var(--w) * 18s)}
+#pup .near{animation-duration:calc(var(--w) * 8s)}
+#pup .road{animation-duration:calc(var(--w) * 4s)}
+@keyframes scrollX{to{transform:translateX(-200px)}}
+#pup .bokeh{animation:bokeh 6s ease-in-out infinite alternate}
+@keyframes bokeh{to{transform:translateY(-6px)}}
+#pup .pfx{transform-box:view-box;transform-origin:105px 176px;transition:transform .35s}
+#pup .walker{transform-box:view-box;transform-origin:105px 176px;animation:bob calc(var(--w) * .5s) ease-in-out infinite;transition:transform .35s}
+@keyframes bob{0%,50%,100%{transform:translateY(0)}25%,75%{transform:translateY(-2.5px)}}
+#pup .leg{transform-box:fill-box;transform-origin:50% 8%;animation:legA calc(var(--w) * .5s) ease-in-out infinite;transition:transform .35s}
+#pup .legB,#pup .legF2{animation-name:legB}
+@keyframes legA{0%,100%{transform:rotate(20deg)}50%{transform:rotate(-20deg)}}
+@keyframes legB{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(20deg)}}
+#pup .tail{transform-box:view-box;transform-origin:77px 146px;animation:wag .35s ease-in-out infinite alternate;transition:transform .4s}
+@keyframes wag{from{transform:rotate(-14deg)}to{transform:rotate(12deg)}}
+#pup .ear{transform-box:view-box;transform-origin:114px 108px;animation:ear calc(var(--w) * .5s) ease-in-out infinite alternate}
+@keyframes ear{from{transform:rotate(-6deg)}to{transform:rotate(8deg)}}
+#pup .head{transform-box:view-box;transform-origin:114px 136px;transition:transform .45s}
+#pup [data-l]{opacity:0;transition:opacity .5s}
+#pup [data-l].on{opacity:1}
+#pup [data-gone]{transition:opacity .4s}
+#pup [data-gone].off{opacity:0}
+#pup [data-l].on.off{opacity:0}
+/* cojea con la escayola */
+#pup.limp .walker{animation-name:limp}
+@keyframes limp{0%,100%{transform:none}20%{transform:translateY(-1.5px) rotate(-1deg)}50%{transform:translateY(2px) rotate(3deg)}70%{transform:translateY(-1px)}}
+#pup.sad .tail{animation-duration:.9s}
+/* en el suelo al final */
+#pup.down .scroll,#pup.down .walker,#pup.down .leg,#pup.down .ear,#pup.down .tail{animation:none}
+#pup.down .walker{transform:translateY(11px)}
+#pup.down .legF,#pup.down .legF2{transform:rotate(-72deg)}
+#pup.down .legB,#pup.down .legB2{transform:rotate(72deg)}
+#pup.down .head{transform:rotate(16deg)}
+#pup.down .tail{transform:rotate(-40deg)}
+#pup .cloth{transform-box:fill-box;transform-origin:0 50%;animation:flag 1s ease-in-out infinite alternate}
+@keyframes flag{to{transform:skewY(-10deg) scaleX(.9)}}
+#pup .spin10{transform-box:view-box;transform-origin:128px 112px;animation:spin 1.6s linear infinite}
+/* ganó: saltitos y corazones */
+#pup .yay{opacity:0}
+#pup.happy .yay{animation:yay 1.4s ease-out infinite}
+@keyframes yay{0%{opacity:0;transform:translateY(8px)}30%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+#pup.happy .walker{animation:hop .55s ease-in-out infinite}
+@keyframes hop{0%,100%{transform:none}50%{transform:translateY(-10px)}}
+/* efectos: solo existen mientras dura su desgracia */
+#pup .fx{display:none}
+#pup .fx *{transform-box:fill-box;transform-origin:50% 50%}
+#pup.ev1 .fx1{display:inline}
+#pup.ev1 .pfx{animation:p1 2.6s ease-in-out both}
+#pup.ev2 .fx2{display:inline}
+#pup.ev2 .pfx{animation:p2 2.6s ease-in-out both}
+#pup.ev3 .fx3{display:inline}
+#pup.ev3 .pfx{animation:p3 2.6s ease-in-out both}
+#pup.ev4 .fx4{display:inline}
+#pup.ev4 .pfx{animation:p4 2.6s ease-in-out both}
+#pup.ev5 .fx5{display:inline}
+#pup.ev5 .pfx{animation:p5 2.6s ease-in-out both}
+#pup.ev6 .fx6{display:inline}
+#pup.ev6 .pfx{animation:p6 2.6s ease-in-out both}
+#pup.ev7 .fx7{display:inline}
+#pup.ev7 .pfx{animation:p7 2.6s ease-in-out both}
+#pup.ev8 .fx8{display:inline}
+#pup.ev8 .pfx{animation:p8 2.6s ease-in-out both}
+#pup.ev9 .fx9{display:inline}
+#pup.ev9 .pfx{animation:p9 2.6s ease-in-out both}
+#pup.ev10 .fx10{display:inline}
+#pup.ev10 .pfx{animation:p10 2.6s ease-in-out both}
+#pup.ev2 .pfx{animation:p2 2.6s ease-in-out both,char 2.6s linear both}
+@keyframes char{0%,31%{filter:none}33%,52%{filter:brightness(.25)}64%,100%{filter:none}}
+/* 1 coche */
+#pup .car{animation:car 2.6s linear both}
+@keyframes car{0%{transform:translateX(-40px)}55%,100%{transform:translateX(330px)}}
+@keyframes p1{0%,13%{transform:none}28%{transform:translate(40px,-72px) rotate(200deg)}44%{transform:translate(58px,-24px) rotate(360deg)}52%{transform:translate(56px,0) rotate(360deg) scale(1.25,.55)}62%{transform:translate(48px,0) rotate(360deg) scale(.92,1.1)}80%{transform:translate(14px,0) rotate(360deg)}100%{transform:translate(0,0) rotate(360deg)}}
+/* 2 rayo */
+#pup .cloud{animation:cloud 2.6s ease both}
+@keyframes cloud{0%{opacity:0;transform:translateY(-20px)}15%,80%{opacity:1;transform:none}100%{opacity:0}}
+#pup .bolt{animation:bolt 2.6s linear both}
+@keyframes bolt{0%,29%{opacity:0}30%{opacity:1}33%{opacity:0}36%{opacity:1}44%,100%{opacity:0}}
+#pup .flash{animation:flash 2.6s linear both}
+@keyframes flash{0%,29%{opacity:0}30%{opacity:.75}33%{opacity:0}36%{opacity:.55}42%,100%{opacity:0}}
+#pup .smk{animation:smk 2.6s ease-out both}
+@keyframes smk{0%,44%{opacity:0;transform:none}55%{opacity:.8}100%{opacity:0;transform:translateY(-30px) scale(1.6)}}
+@keyframes p2{0%,30%{transform:none}33%{transform:translate(-2px,-3px)}36%{transform:translate(2px,0)}39%{transform:translate(-2px,-2px)}42%{transform:translate(2px,0)}45%{transform:translate(-1px,-1px)}50%{transform:translate(0,-10px) scale(1.05)}58%,100%{transform:none}}
+/* 3 hueco */
+#pup .hole{animation:hole 2.6s ease-in-out both}
+@keyframes hole{0%{transform:translateX(120px)}22%,76%{transform:translateX(0)}100%{transform:translateX(-170px)}}
+#pup .dirt{animation:dirt 2.6s ease-out both}
+@keyframes dirt{0%,66%{opacity:0;transform:none}72%{opacity:1}90%{opacity:1;transform:translateY(-22px) scale(1.4)}100%{opacity:0;transform:translateY(-8px)}}
+@keyframes p3{0%,22%{transform:none}30%{transform:translate(42px,-10px) scale(.8)}38%{transform:translate(48px,12px) scale(.25)}40%,64%{transform:translate(48px,14px) scale(0)}74%{transform:translate(30px,-45px) scale(1.05)}86%{transform:translate(0,0) scale(1.12,.85)}100%{transform:none}}
+/* 4 meteorito */
+#pup .meteor{animation:meteor 2.6s ease-in both}
+@keyframes meteor{0%{transform:translate(110px,-130px);opacity:1}36%{transform:translate(0,0);opacity:1}38%,100%{transform:translate(0,0);opacity:0}}
+#pup .boom{animation:boom 2.6s ease-out both}
+@keyframes boom{0%,36%{opacity:0;transform:scale(.2)}42%{opacity:1;transform:scale(1.3)}58%,100%{opacity:0;transform:scale(1.8)}}
+#pup .stars4{animation:stars4 2.6s linear both}
+@keyframes stars4{0%,40%{opacity:0}44%,66%{opacity:1}70%,100%{opacity:0}}
+@keyframes p4{0%,35%{transform:none}39%,64%{transform:scale(1.4,.32)}70%{transform:scale(.85,1.25)}76%{transform:scale(1.15,.85)}82%{transform:scale(.95,1.05)}90%,100%{transform:none}}
+/* 5 tornado */
+#pup .torn{animation:torn 2.6s ease-in-out both}
+@keyframes torn{0%{transform:translateX(150px);opacity:0}8%{opacity:1}22%,55%{transform:translateX(0)}72%{transform:translateX(-180px);opacity:1}100%{transform:translateX(-180px);opacity:0}}
+#pup .twist{transform-origin:50% 100%;animation:twist .28s ease-in-out infinite alternate}
+@keyframes twist{from{transform:skewX(-7deg)}to{transform:skewX(7deg)}}
+#pup .pum{animation:pum 2.6s ease-out both}
+@keyframes pum{0%,77%{opacity:0;transform:scale(.3)}82%{opacity:1;transform:scale(1.25)}94%{opacity:1;transform:scale(1)}100%{opacity:0}}
+@keyframes p5{0%,22%{transform:none}32%{transform:translate(0,-40px) rotate(360deg) scale(.85)}55%{transform:translate(-4px,-118px) rotate(1080deg) scale(.7)}70%{transform:translate(-20px,-135px) rotate(1260deg) scale(.75)}78%{transform:translate(0,0) rotate(1440deg) scale(1.4,.42)}86%{transform:translate(0,0) rotate(1440deg) scale(.9,1.15)}93%,100%{transform:translate(0,0) rotate(1440deg)}}
+/* 6 ladrón */
+#pup .thief{animation:thief 2.6s ease-in-out both}
+@keyframes thief{0%{transform:translateX(-80px)}30%,38%{transform:translateX(56px)}75%,100%{transform:translateX(300px)}}
+#pup .tlegs{animation:tlegs .18s linear infinite alternate}
+@keyframes tlegs{to{transform:skewX(25deg)}}
+#pup .loot{animation:loot 2.6s linear both}
+@keyframes loot{0%,35%{opacity:0}37%,100%{opacity:1}}
+#pup .bubble{transform-origin:20% 100%;animation:bubble 2.6s ease-out both}
+@keyframes bubble{0%,50%{opacity:0;transform:scale(.4)}56%{opacity:1;transform:scale(1.08)}92%{opacity:1;transform:scale(1)}100%{opacity:0}}
+@keyframes p6{0%,40%{transform:none}44%{transform:translateY(-8px)}48%,62%{transform:scaleX(-1)}66%,100%{transform:none}}
+/* 7 maceta */
+#pup .pot{animation:pot 2.6s ease-in both}
+@keyframes pot{0%{transform:translateY(-120px);opacity:1}35%{transform:translateY(0);opacity:1}37%,100%{transform:translateY(0);opacity:0}}
+#pup .s1,#pup .s2,#pup .s3{opacity:0}
+#pup .s1{animation:s1 2.6s ease-in both}#pup .s2{animation:s2 2.6s ease-in both}#pup .s3{animation:s3 2.6s ease-in both}
+@keyframes s1{0%,35%{opacity:0;transform:none}37%{opacity:1}70%{opacity:1;transform:translate(-28px,62px) rotate(-200deg)}100%{opacity:0;transform:translate(-30px,70px) rotate(-220deg)}}
+@keyframes s2{0%,35%{opacity:0;transform:none}37%{opacity:1}70%{opacity:1;transform:translate(24px,64px) rotate(180deg)}100%{opacity:0;transform:translate(26px,70px) rotate(200deg)}}
+@keyframes s3{0%,35%{opacity:0;transform:none}37%{opacity:1}72%{opacity:1;transform:translate(8px,72px) rotate(90deg)}100%{opacity:0;transform:translate(8px,74px) rotate(90deg)}}
+#pup .orbit7{transform-box:view-box;transform-origin:124px 104px;animation:orbit7 2.6s linear both}
+@keyframes orbit7{0%,38%{opacity:0;transform:rotate(0)}42%{opacity:1}92%{opacity:1}100%{opacity:0;transform:rotate(720deg)}}
+@keyframes p7{0%,35%{transform:none}37%{transform:scale(1.12,.82)}42%{transform:none}50%{transform:rotate(-5deg)}58%{transform:rotate(5deg)}66%{transform:rotate(-4deg)}74%{transform:rotate(4deg)}84%,100%{transform:none}}
+/* 8 plátano */
+#pup .peel{animation:peel 2.6s ease-in-out both}
+@keyframes peel{0%{transform:translateX(80px);opacity:1}28%{transform:translateX(-32px)}34%{transform:translate(-20px,-6px) rotate(40deg)}60%{transform:translate(60px,-60px) rotate(360deg);opacity:1}70%,100%{opacity:0;transform:translate(70px,-70px) rotate(400deg)}}
+@keyframes p8{0%,28%{transform:none}34%{transform:translate(6px,-14px) rotate(-25deg)}44%{transform:translate(10px,-48px) rotate(-150deg)}54%,72%{transform:translate(8px,-64px) rotate(-180deg) scale(1,.92)}84%{transform:translate(4px,-30px) rotate(-300deg)}94%,100%{transform:translate(0,0) rotate(-360deg)}}
+/* 9 abejas */
+#pup .swarm{animation:swarm 2.6s ease-in-out both}
+@keyframes swarm{0%{transform:translateX(-160px)}15%,85%{transform:translateX(0)}100%{transform:translateX(220px)}}
+#pup .bee{transform-box:view-box;transform-origin:110px 132px;animation:spin 1s linear infinite}
+#pup .wing{animation:wing .08s linear infinite alternate}
+@keyframes wing{to{transform:scaleY(.4)}}
+@keyframes p9{0%,14%{transform:none}20%{transform:translateY(-16px) rotate(-6deg)}26%{transform:none}32%{transform:translateY(-14px) rotate(6deg)}38%{transform:none}44%{transform:translateY(-16px) rotate(-6deg)}50%{transform:none}56%{transform:translateY(-12px) rotate(5deg)}62%{transform:none}68%{transform:translateY(-14px) rotate(-5deg)}74%,100%{transform:none}}
+/* 10 se desploma */
+@keyframes p10{0%{transform:none}12%{transform:rotate(-6deg)}24%{transform:rotate(6deg)}36%{transform:rotate(-8deg)}46%{transform:translate(4px,-8px) rotate(4deg)}58%{transform:translate(0,4px) scale(1.12,.8)}70%{transform:scale(1,.95)}100%{transform:none}}
+/* ---- temática romántica ---- */
+body.love{background:radial-gradient(120% 60% at 50% 0%,#4a1f36 0%,var(--bg) 65%) fixed,var(--bg)}
+#lovefall{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;opacity:0;transition:opacity 1.2s}
+body.love #lovefall{opacity:1}
+#lovefall i{position:absolute;top:-34px;font-style:normal;opacity:.55;animation:flake linear infinite}
+#cupids{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;display:none}
+body.love #cupids{display:block}
+#cupids i{position:absolute;left:0;font-style:normal;font-size:30px;animation:cupid 22s linear infinite}
+#cupids i:nth-child(2){top:42%;font-size:24px;animation-duration:30s;animation-delay:-14s;animation-direction:reverse}
+#cupids i:nth-child(1){top:14%}
+@keyframes cupid{0%{transform:translate(-60px,0)}25%{transform:translate(25vw,-20px)}50%{transform:translate(50vw,10px)}75%{transform:translate(75vw,-15px)}100%{transform:translate(calc(100vw + 60px),0)}}
+body.love .lights{display:flex}
+body.love .lights i{background:none;box-shadow:none;width:auto;height:auto;margin-top:0;font-size:13px;font-style:normal;line-height:1;animation:beat 1.4s ease-in-out infinite}
+body.love .lights i::before{content:"♥"}
+body.love .lights i:nth-child(4n+1){color:#ff6b8a}body.love .lights i:nth-child(4n+2){color:#ffc2d1}body.love .lights i:nth-child(4n+3){color:#e23d5b}body.love .lights i:nth-child(4n){color:#ff9ebb}
+@keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#lovefall,#cupids{display:none}#pup .scroll,#pup .walker,#pup .leg,#pup .tail,#pup .ear{animation:none}}
 /* reacciones: emojis y frases que suben por la pantalla un momento */
 .react{position:fixed;left:0;right:0;bottom:0;z-index:4;background:rgba(28,33,48,.96);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;
   padding:8px max(12px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
@@ -191,6 +350,8 @@ body.has-react{padding-bottom:150px}
 </head>
 <body>
 <div id="snowfall" aria-hidden="true"></div>
+<div id="lovefall" aria-hidden="true"></div>
+<div id="cupids" aria-hidden="true"><i>👼</i><i>👼</i></div>
 <div class="wrap">
   <h1>Ahorcado a dos</h1>
   <div class="lights" id="lights" aria-hidden="true"></div>
@@ -256,6 +417,139 @@ body.has-react{padding-bottom:150px}
         <path class="part" pathLength="1" d="M130 120L150 155"/>
         <g id="face"><path d="M122 44l6 6M128 44l-6 6M132 44l6 6M138 44l-6 6M124 59q6-5 12 0"/></g>
       </g>
+    </svg>
+    <svg viewBox="0 0 200 220" id="pup" hidden aria-label="Perrito que camina y sufre una desgracia con cada fallo">
+      <defs>
+        <linearGradient id="skyL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e0e1e"/><stop offset=".55" stop-color="#5a2340"/><stop offset="1" stop-color="#c2566f"/></linearGradient>
+        <radialGradient id="lampG"><stop offset="0" stop-color="#ffe3a3" stop-opacity=".9"/><stop offset="1" stop-color="#ffb36b" stop-opacity="0"/></radialGradient>
+        <radialGradient id="moonG"><stop offset="0" stop-color="#fff6e0" stop-opacity=".5"/><stop offset="1" stop-color="#fff6e0" stop-opacity="0"/></radialGradient>
+        <path id="hrt" d="M0 3C-6-2-4-8 0-5C4-8 6-2 0 3z"/>
+        <g id="bee"><ellipse class="wing" cx="-.6" cy="-3.6" rx="2.3" ry="1.5" fill="#fff" opacity=".9"/><ellipse rx="3.8" ry="2.7" fill="#ffd93d" stroke="#2b2b2b" stroke-width=".8"/><path d="M-1.2-2.5v5M1.4-2.3v4.6" stroke="#2b2b2b" stroke-width="1"/><circle cx="3" cy="-.6" r=".6" fill="#2b2b2b"/></g>
+        <g id="farT">
+          <g fill="#3a1830"><rect x="0" y="122" width="26" height="56"/><rect x="30" y="100" width="20" height="78"/><rect x="54" y="130" width="30" height="48"/><rect x="88" y="112" width="22" height="66"/><rect x="114" y="134" width="28" height="44"/><rect x="146" y="106" width="18" height="72"/><rect x="168" y="126" width="32" height="52"/></g>
+          <g fill="#ffcf8a" opacity=".75"><rect x="6" y="130" width="4" height="5"/><rect x="15" y="142" width="4" height="5"/><rect x="35" y="110" width="4" height="5"/><rect x="42" y="124" width="4" height="5"/><rect x="62" y="138" width="4" height="5"/><rect x="73" y="150" width="4" height="5"/><rect x="94" y="120" width="4" height="5"/><rect x="101" y="136" width="4" height="5"/><rect x="121" y="142" width="4" height="5"/><rect x="151" y="116" width="4" height="5"/><rect x="156" y="132" width="4" height="5"/><rect x="176" y="134" width="4" height="5"/><rect x="188" y="146" width="4" height="5"/></g>
+          <use href="#hrt" transform="translate(40 94) scale(1.1)" fill="#ff6b8a"/>
+        </g>
+        <g id="nearT">
+          <path d="M0 177v-15q9-10 19 0q10-12 21 0q9-9 18 0v15z" fill="#2c4a37"/>
+          <g fill="#e23d5b"><circle cx="8" cy="164" r="3.4"/><circle cx="22" cy="158" r="3.4"/><circle cx="36" cy="165" r="3.4"/><circle cx="50" cy="160" r="3.4"/></g>
+          <g fill="none" stroke="#a51d3e" stroke-width=".9"><path d="M7 164a1.4 1.4 0 1 1 2 0M21 158a1.4 1.4 0 1 1 2 0M35 165a1.4 1.4 0 1 1 2 0M49 160a1.4 1.4 0 1 1 2 0"/></g>
+          <circle cx="81" cy="124" r="17" fill="url(#lampG)"/>
+          <rect x="79.5" y="124" width="3" height="54" fill="#241018"/><path d="M75 124h12l-2-7h-8z" fill="#241018"/><circle cx="81" cy="126.5" r="2.6" fill="#ffe3a3"/>
+          <g fill="#7a4a35"><rect x="118" y="150" width="48" height="3.5" rx="1.5"/><rect x="118" y="160" width="48" height="4" rx="1.5"/><rect x="122" y="164" width="3" height="13"/><rect x="159" y="164" width="3" height="13"/></g>
+          <g><path d="M135 151q0 6 4 6q4 0 4-6z" fill="#8b1e3f"/><path d="M139 157v3M136.5 160h5" stroke="#f2e6ee" stroke-width=".9"/><path d="M146 151q0 6 4 6q4 0 4-6z" fill="#8b1e3f"/><path d="M150 157v3M147.5 160h5" stroke="#f2e6ee" stroke-width=".9"/></g>
+          <path d="M170 177v-14q8-9 16 0q8-10 14 0v14z" fill="#2c4a37"/>
+          <g fill="#e23d5b"><circle cx="178" cy="162" r="3.2"/><circle cx="193" cy="164" r="3.2"/></g>
+        </g>
+        <g id="roadT" fill="#5a2c42"><rect x="4" y="183" width="18" height="5" rx="2"/><rect x="30" y="183" width="18" height="5" rx="2"/><rect x="56" y="183" width="18" height="5" rx="2"/><rect x="82" y="183" width="18" height="5" rx="2"/><rect x="108" y="183" width="18" height="5" rx="2"/><rect x="134" y="183" width="18" height="5" rx="2"/><rect x="160" y="183" width="18" height="5" rx="2"/><rect x="186" y="183" width="12" height="5" rx="2"/>
+          <rect x="16" y="193" width="18" height="5" rx="2"/><rect x="42" y="193" width="18" height="5" rx="2"/><rect x="68" y="193" width="18" height="5" rx="2"/><rect x="94" y="193" width="18" height="5" rx="2"/><rect x="120" y="193" width="18" height="5" rx="2"/><rect x="146" y="193" width="18" height="5" rx="2"/><rect x="172" y="193" width="18" height="5" rx="2"/>
+          <rect x="4" y="204" width="18" height="5" rx="2"/><rect x="30" y="204" width="18" height="5" rx="2"/><rect x="56" y="204" width="18" height="5" rx="2"/><rect x="82" y="204" width="18" height="5" rx="2"/><rect x="108" y="204" width="18" height="5" rx="2"/><rect x="134" y="204" width="18" height="5" rx="2"/><rect x="160" y="204" width="18" height="5" rx="2"/><rect x="186" y="204" width="12" height="5" rx="2"/></g>
+      </defs>
+      <rect width="200" height="220" fill="url(#skyL)"/>
+      <circle cx="36" cy="38" r="30" fill="url(#moonG)"/><circle cx="36" cy="38" r="12" fill="#fff3dc"/>
+      <g class="bokeh" fill="#ff8fab" opacity=".35"><use href="#hrt" transform="translate(70 30) scale(1.2)"/><use href="#hrt" transform="translate(120 52) scale(.9)"/><use href="#hrt" transform="translate(168 22) scale(1.4)"/><use href="#hrt" transform="translate(150 80) scale(.8)"/><use href="#hrt" transform="translate(96 74) scale(.7)"/></g>
+      <g class="scroll far"><use href="#farT"/><use href="#farT" x="200"/></g>
+      <g class="scroll near"><use href="#nearT"/><use href="#nearT" x="200"/></g>
+      <rect y="177" width="200" height="43" fill="#3e1f30"/>
+      <g class="scroll road"><use href="#roadT"/><use href="#roadT" x="200"/></g>
+      <g class="fx fx3"><g class="hole"><ellipse cx="153" cy="179" rx="24" ry="6.5" fill="#160a12"/><path d="M129 179q24 7 48 0" stroke="#7a5236" stroke-width="2" fill="none"/></g></g>
+      <path data-l="10" d="M141 179l28-6" stroke="#8b5a3c" stroke-width="3" stroke-linecap="round"/>
+      <g data-l="10"><path d="M66 178V139" stroke="#8b5a3c" stroke-width="2" stroke-linecap="round"/><path class="cloth" d="M66 140q9-4 17 1q-7 5-17 8z" fill="#fff" stroke="#cfcfcf" stroke-width="1"/></g>
+      <g class="pfx"><g class="walker">
+        <g class="leg legF2"><rect x="106" y="156" width="8" height="20" rx="4" fill="#e6e6e6" stroke="#2b2b2b" stroke-width="2"/><rect data-l="3" x="106" y="168" width="8" height="8" rx="3" fill="#7a5236" opacity=".7"/></g>
+        <g class="leg legB2"><rect x="92" y="156" width="8" height="20" rx="4" fill="#e6e6e6" stroke="#2b2b2b" stroke-width="2"/><rect data-l="3" x="92" y="168" width="8" height="8" rx="3" fill="#7a5236" opacity=".7"/></g>
+        <g class="tail"><path d="M77 146q-14-6-12-24" stroke="#2b2b2b" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M77 146q-14-6-12-24" stroke="#fff" stroke-width="3.6" fill="none" stroke-linecap="round"/><circle cx="65" cy="122.5" r="3.4" fill="#1f1f1f"/></g>
+        <ellipse cx="100" cy="150" rx="26" ry="16" fill="#fff" stroke="#2b2b2b" stroke-width="2.2"/>
+        <path d="M86 138q12-6 22 1q0 9-11 10q-10-1-11-11z" fill="#1f1f1f"/>
+        <path data-l="1" d="M82 146l26 14M88 141l26 14" stroke="#4a4a4a" stroke-width="3" stroke-dasharray="3 2.5" opacity=".5"/>
+        <g data-l="2" fill="#555" opacity=".45"><ellipse cx="110" cy="146" rx="6" ry="4"/><ellipse cx="92" cy="157" rx="5" ry="3"/></g>
+        <g data-l="5"><path d="M95 133q6-8 12-2q-6 6-12 2z" fill="#5aa469"/><path d="M80 139l-3-4l5 1l-1-5l4 3" stroke="#2b2b2b" fill="none" stroke-width="1.3"/></g>
+        <g data-l="9" fill="#ff6b6b"><circle cx="104" cy="147" r="1.8"/><circle cx="92" cy="152" r="1.6"/><circle cx="112" cy="156" r="1.7"/><circle cx="84" cy="150" r="1.4"/></g>
+        <g class="leg legB"><rect x="84" y="156" width="8" height="20" rx="4" fill="#fff" stroke="#2b2b2b" stroke-width="2"/><rect data-l="3" x="84" y="168" width="8" height="8" rx="3" fill="#7a5236" opacity=".7"/><g data-l="8"><rect x="82.5" y="159" width="11" height="14" rx="4" fill="#fdfdfd" stroke="#b9b9b9"/><use href="#hrt" transform="translate(88 165) scale(.35)" fill="#ff8fab"/></g></g>
+        <g class="leg legF"><rect x="114" y="156" width="8" height="20" rx="4" fill="#fff" stroke="#2b2b2b" stroke-width="2"/><rect data-l="3" x="114" y="168" width="8" height="8" rx="3" fill="#7a5236" opacity=".7"/></g>
+        <g data-l="8" data-gone="10"><path d="M129 149l3 27" stroke="#8b5a3c" stroke-width="3" stroke-linecap="round"/><path d="M124.5 149.5h10" stroke="#5c3b28" stroke-width="4" stroke-linecap="round"/><path d="M128.5 160h5" stroke="#5c3b28" stroke-width="2.4" stroke-linecap="round"/></g>
+        <g class="head">
+          <path d="M120 106q6-4 10 2q-4 2-10-2z" fill="#1f1f1f"/>
+          <circle cx="124" cy="122" r="16" fill="#fff" stroke="#2b2b2b" stroke-width="2.2"/>
+          <ellipse cx="139" cy="129" rx="10" ry="7.5" fill="#fff" stroke="#2b2b2b" stroke-width="2.2"/>
+          <ellipse cx="135" cy="128.5" rx="5.5" ry="5" fill="#fff"/>
+          <ellipse cx="114" cy="137" rx="7" ry="4" fill="#fff"/>
+          <g data-l="2" fill="#555" opacity=".45"><ellipse cx="120" cy="117" rx="5" ry="3.5"/></g>
+          <path data-l="2" d="M116 107l2-9l3 8l3-10l2 10l3-7l1 8" fill="#fff" stroke="#2b2b2b" stroke-width="1.8" stroke-linejoin="round"/>
+          <ellipse cx="148.5" cy="126.5" rx="3.3" ry="2.6" fill="#1f1f1f"/><circle cx="147.6" cy="125.6" r=".8" fill="#fff"/>
+          <circle cx="133" cy="128.5" r="2.6" fill="#ffb3c1" opacity=".7"/>
+          <path class="mouth" d="M143 133.5q-3 3-7 1" stroke="#2b2b2b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path data-l="10" d="M139 135q1 6 4 5q2-2 0-6z" fill="#ff8fab" stroke="#2b2b2b" stroke-width="1"/>
+          <g data-gone="10"><circle cx="128.5" cy="117" r="2.6" fill="#1f1f1f"/><circle cx="129.3" cy="116.2" r=".8" fill="#fff"/></g>
+          <path data-l="10" d="M128.5 117m-3 0a3 3 0 1 0 3-3a2 2 0 1 0 2 2a1 1 0 1 0-1 1" fill="none" stroke="#2b2b2b" stroke-width="1.1"/>
+          <g data-l="5" data-gone="10"><path d="M125.5 114h6.2v2.8h-6.2z" fill="#fff"/><path d="M125.5 116.8h6.2" stroke="#2b2b2b" stroke-width="1.3"/></g>
+          <path data-l="6" d="M125 111.5l7 1.8" stroke="#2b2b2b" stroke-width="1.5" stroke-linecap="round"/>
+          <circle data-l="9" cx="128.5" cy="117" r="5" fill="none" stroke="#7a4a8a" stroke-width="2.4" opacity=".65"/>
+          <g data-l="4"><path d="M108.5 117q15-15 31-3" stroke="#d6d6d6" stroke-width="6.5" fill="none" stroke-linecap="round"/><path d="M108.5 117q15-15 31-3" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M124 104.5v5M121.5 107h5" stroke="#e23d5b" stroke-width="1.5" stroke-linecap="round"/></g>
+          <g data-l="7"><circle cx="117" cy="106" r="5" fill="#ffc1cc" stroke="#2b2b2b" stroke-width="1.4"/><g transform="rotate(35 134 111)"><rect x="128.5" y="109" width="11" height="4" rx="2" fill="#f4c27a"/></g><g transform="rotate(-35 134 111)"><rect x="128.5" y="109" width="11" height="4" rx="2" fill="#f4c27a"/></g></g>
+          <path class="ear" d="M114 107q-14 0-14 16q0 14 9 15q7-1 7-13q0-10-2-18z" fill="#1f1f1f"/>
+        </g>
+        <g data-gone="6"><path d="M111 133q4 9 15 6" stroke="#e23d5b" stroke-width="4" fill="none" stroke-linecap="round"/><use href="#hrt" transform="translate(119 141.5) scale(.55)" fill="#ffd93d" stroke="#b8860b" stroke-width="1"/></g>
+      </g></g>
+      <g class="yay" fill="#ff6b8a"><use href="#hrt" transform="translate(118 98)"/><use href="#hrt" transform="translate(132 92) scale(.8)"/><use href="#hrt" transform="translate(106 92) scale(.7)"/></g>
+      <g data-l="10" class="dizzy"><g class="spin10"><path d="M128 102l1.2 2.6 2.8.3-2.1 1.9.6 2.8-2.5-1.4-2.5 1.4.6-2.8-2.1-1.9 2.8-.3z" fill="#ffd93d"/><path d="M142 114l1 2.2 2.4.2-1.8 1.6.5 2.4-2.1-1.2-2.1 1.2.5-2.4-1.8-1.6 2.4-.2z" fill="#ffd93d"/><path d="M114 116l1 2.2 2.4.2-1.8 1.6.5 2.4-2.1-1.2-2.1 1.2.5-2.4-1.8-1.6 2.4-.2z" fill="#ffd93d"/></g></g>
+      <!-- 1 coche -->
+      <g class="fx fx1"><g class="car">
+        <path d="M-80 158h12M-84 166h16M-78 172h10" stroke="#fff" stroke-width="2" opacity=".55" stroke-linecap="round"/>
+        <path d="M-62 170q0-14 14-14h10l10-12h22q8 0 12 12h6q8 0 8 10v6h-82z" fill="#ff6f91" stroke="#2b2b2b" stroke-width="2"/>
+        <path d="M-34 156l8-9h9v9zM-14 147h10q5 0 8 9h-18z" fill="#bfe6ff" stroke="#2b2b2b" stroke-width="1.2"/>
+        <use href="#hrt" transform="translate(-30 165) scale(.6)" fill="#fff"/>
+        <circle cx="16" cy="163" r="2.6" fill="#ffe27a"/>
+        <circle cx="-44" cy="176" r="7" fill="#2b2b2b"/><circle cx="-44" cy="176" r="2.6" fill="#ddd"/><circle cx="2" cy="176" r="7" fill="#2b2b2b"/><circle cx="2" cy="176" r="2.6" fill="#ddd"/>
+      </g></g>
+      <!-- 2 rayo -->
+      <g class="fx fx2">
+        <g class="cloud" fill="#5d5470"><ellipse cx="120" cy="40" rx="24" ry="11"/><circle cx="106" cy="34" r="10"/><circle cx="125" cy="29" r="13"/><circle cx="140" cy="37" r="9"/></g>
+        <path class="bolt" d="M122 50l-10 28h9l-8 28l22-35h-10l8-21z" fill="#ffe066" stroke="#fff3b0" stroke-width="1.5" stroke-linejoin="round"/>
+        <g class="smk" fill="#9a9aa8"><circle cx="124" cy="100" r="6"/><circle cx="114" cy="96" r="5"/><circle cx="133" cy="97" r="4"/></g>
+      </g>
+      <!-- 3 hueco: tierra al salir -->
+      <g class="fx fx3"><g class="dirt" fill="#7a5236"><circle cx="146" cy="172" r="2.5"/><circle cx="156" cy="168" r="2"/><circle cx="162" cy="173" r="2.2"/><circle cx="150" cy="166" r="1.6"/></g></g>
+      <!-- 4 meteorito -->
+      <g class="fx fx4">
+        <g class="meteor"><path d="M118 96l52-58l8 8l-50 60z" fill="#ff9a3c" opacity=".75"/><path d="M121 100l44-48l4 4l-42 48z" fill="#ffe27a" opacity=".85"/><circle cx="125" cy="102" r="9" fill="#7a5a50" stroke="#2b2b2b" stroke-width="1.5"/><circle cx="122" cy="100" r="2" fill="#5c4038"/><circle cx="128" cy="105" r="1.6" fill="#5c4038"/></g>
+        <g class="boom"><circle cx="124" cy="112" r="18" fill="#ffb347"/><circle cx="124" cy="112" r="10" fill="#fff3b0"/></g>
+        <g class="stars4"><path d="M100 128l1.2 2.6 2.8.3-2.1 1.9.6 2.8-2.5-1.4-2.5 1.4.6-2.8-2.1-1.9 2.8-.3z" fill="#ffd93d"/><path d="M136 124l1.2 2.6 2.8.3-2.1 1.9.6 2.8-2.5-1.4-2.5 1.4.6-2.8-2.1-1.9 2.8-.3z" fill="#ffd93d"/></g>
+      </g>
+      <!-- 5 tornado -->
+      <g class="fx fx5"><g class="torn"><g class="twist" fill="none" stroke="#c9c1d6" stroke-width="4" opacity=".9" stroke-linecap="round">
+        <ellipse cx="105" cy="58" rx="36" ry="8"/><ellipse cx="105" cy="80" rx="28" ry="7"/><ellipse cx="106" cy="102" rx="21" ry="6"/><ellipse cx="107" cy="122" rx="15" ry="5"/><ellipse cx="108" cy="140" rx="10" ry="4"/><ellipse cx="110" cy="156" rx="6" ry="3"/><ellipse cx="111" cy="169" rx="3" ry="2"/>
+        <circle cx="78" cy="70" r="2" fill="#5aa469" stroke="none"/><circle cx="132" cy="92" r="1.8" fill="#e23d5b" stroke="none"/><circle cx="90" cy="118" r="1.6" fill="#7a5236" stroke="none"/>
+      </g></g>
+      <text class="pum" x="105" y="122" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="22" fill="#ffd93d" stroke="#2b2b2b" stroke-width="1.6" paint-order="stroke">¡PUM!</text></g>
+      <!-- 6 ladrón -->
+      <g class="fx fx6"><g class="thief">
+        <path d="M24 162q-14-4-16-18" stroke="#6d6875" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M24 162q-14-4-16-18" stroke="#2b2b2b" stroke-width="7" fill="none" stroke-dasharray="3 4"/>
+        <path d="M26 152q-9-10 2-17q10 4 4 17z" fill="#b08968" stroke="#2b2b2b" stroke-width="1.5"/>
+        <g class="tlegs"><path d="M32 168v8M44 168v8" stroke="#2b2b2b" stroke-width="4" stroke-linecap="round"/></g>
+        <ellipse cx="38" cy="160" rx="13" ry="11" fill="#8d8798" stroke="#2b2b2b" stroke-width="1.8"/>
+        <path d="M41 134l1-7l5 5zM52 132l4-6l2 7z" fill="#8d8798" stroke="#2b2b2b" stroke-width="1.5"/>
+        <circle cx="49" cy="142" r="10" fill="#8d8798" stroke="#2b2b2b" stroke-width="1.8"/>
+        <rect x="41" y="138" width="17" height="6" rx="3" fill="#1f1f1f"/><circle cx="47" cy="141" r="1.4" fill="#fff"/><circle cx="54" cy="141" r="1.4" fill="#fff"/>
+        <circle cx="59" cy="145" r="2" fill="#2b2b2b"/>
+        <path d="M46 156l16-14" stroke="#2b2b2b" stroke-width="3.5" stroke-linecap="round"/>
+        <g class="loot"><circle cx="63" cy="140" r="4.5" fill="none" stroke="#e23d5b" stroke-width="2.5"/><use href="#hrt" transform="translate(63 146) scale(.5)" fill="#ffd93d"/></g>
+      </g>
+      <g class="bubble"><rect x="134" y="80" width="58" height="20" rx="10" fill="#fff" stroke="#2b2b2b" stroke-width="1.2"/><path d="M146 99.4l-5 8l11-8z" fill="#fff" stroke="#2b2b2b" stroke-width="1.2" stroke-linejoin="round"/><path d="M145 99h8" stroke="#fff" stroke-width="2"/><text x="163" y="93.5" font-size="9" text-anchor="middle" font-family="Fredoka,sans-serif" fill="#2b2b2b">¡Mi collar!</text></g></g>
+      <!-- 7 maceta -->
+      <g class="fx fx7">
+        <g class="pot"><path d="M124 88v-10" stroke="#3f8f5a" stroke-width="2"/><circle cx="124" cy="75" r="5" fill="#ff6b8a"/><circle cx="124" cy="75" r="2" fill="#ffd93d"/><rect x="112" y="88" width="24" height="5" rx="1.5" fill="#e08a64" stroke="#2b2b2b" stroke-width="1.5"/><path d="M114 93h20l-3 13h-14z" fill="#d9774f" stroke="#2b2b2b" stroke-width="1.5"/></g>
+        <path class="s1" d="M114 98l7 0l-1 8h-5z" fill="#d9774f" stroke="#2b2b2b" stroke-width="1.2"/>
+        <path class="s2" d="M126 96l8 0l-2 9h-5z" fill="#d9774f" stroke="#2b2b2b" stroke-width="1.2"/>
+        <g class="s3"><path d="M124 98v-8" stroke="#3f8f5a" stroke-width="2"/><circle cx="124" cy="88" r="4" fill="#ff6b8a"/></g>
+        <g class="orbit7"><path d="M124 92l1.2 2.6 2.8.3-2.1 1.9.6 2.8-2.5-1.4-2.5 1.4.6-2.8-2.1-1.9 2.8-.3z" fill="#ffd93d"/><circle cx="108" cy="104" r="2.4" fill="#fff"/><circle cx="140" cy="104" r="2.4" fill="#fff"/></g>
+      </g>
+      <!-- 8 plátano -->
+      <g class="fx fx8"><path class="peel" d="M150 177q6-10 14-3q-5-1-8 4q8-4 12 2q-8-2-12 1z" fill="#ffd93d" stroke="#2b2b2b" stroke-width="1.2"/></g>
+      <!-- 9 abejas -->
+      <g class="fx fx9"><g class="swarm"><g class="bee" style="animation-duration:0.9s;"><use href="#bee" x="136" y="132"/></g><g class="bee" style="animation-duration:1.1s;animation-direction:reverse;"><use href="#bee" x="80" y="124"/></g><g class="bee" style="animation-duration:0.8s;"><use href="#bee" x="110" y="100"/></g><g class="bee" style="animation-duration:1.3s;animation-direction:reverse;"><use href="#bee" x="140" y="150"/></g><g class="bee" style="animation-duration:1s;"><use href="#bee" x="84" y="150"/></g><g class="bee" style="animation-duration:1.2s;animation-direction:reverse;"><use href="#bee" x="118" y="92"/></g></g></g>
+      <!-- 2 destello por encima de todo -->
+      <rect class="fx fx2 flash" width="200" height="220" fill="#fff"/>
     </svg>
     <svg viewBox="0 0 200 220" id="snow" hidden data-mood="0" aria-label="Muñeco de nieve colgado que se derrite con cada fallo">
       <defs>
@@ -365,7 +659,7 @@ const $ = id => document.getElementById(id);
 let sala = new URLSearchParams(location.search).get("sala");
 if (sala && !/^ahorcado-[a-z0-9]{8,20}$/.test(sala)) sala = null;
 // 2 o 3 jugadores: uno pone la palabra (setter) y los demás adivinan por turnos, una letra cada uno (guesser = turno actual)
-const FRESH = () => ({ v: 0, names: ["", "", ""], pts: [0, 0, 0], setter: 0, guesser: 1, phase: "choose", word: "", hint: "", used: [], errors: 0, max: 6, skin: load("ahorcado-skin") === "nieve" ? "nieve" : "clasico" });
+const FRESH = () => ({ v: 0, names: ["", "", ""], pts: [0, 0, 0], setter: 0, guesser: 1, phase: "choose", word: "", hint: "", used: [], errors: 0, max: 6, skin: ["nieve", "perro"].includes(load("ahorcado-skin")) ? load("ahorcado-skin") : "clasico" });
 const players = s => [0, 1, 2].filter(i => s.names[i]);
 const guessers = s => players(s).filter(i => i !== s.setter);
 function nextG(s, from){ const g = guessers(s); if (!g.length) return from; const k = g.indexOf(from); return g[(k + 1) % g.length]; }
@@ -494,9 +788,10 @@ function render(){
   if (mySeat === -1 && S){ $("score").hidden = true; $("waitMsg").textContent = "Entrando en la partida…"; return show("vWait"); }
   if (!S){ $("score").hidden = true; $("waitMsg").textContent = "Cargando la partida…"; return show("vWait"); }
   $("score").hidden = false;
-  document.body.classList.toggle("xmas", ((S.phase === "play" || S.phase === "done") ? S.roundSkin : S.skin) === "nieve");
+  const theme = (S.phase === "play" || S.phase === "done") ? S.roundSkin : S.skin;
+  document.body.classList.toggle("xmas", theme === "nieve"); document.body.classList.toggle("love", theme === "perro");
   const n = players(S).length;
-  const reacting = n >= 2 && !(S.phase === "secret" && mySeat === S.setter); // no tapa el formulario de la palabra
+  const reacting = n >= 2 && !(S.phase === "secret" && mySeat === S.setter) && !(S.phase === "play" && mySeat !== S.setter); // emojis y frases solo para el espectador mientras se adivina
   $("react").hidden = !reacting; document.body.classList.toggle("has-react", reacting);
   $("score").style.gridTemplateColumns = `repeat(${S.names[2] ? 3 : 2},1fr)`;
   $("p2").hidden = !S.names[2];
@@ -535,7 +830,7 @@ const myReacts = new Set();
 let lastReact = 0;
 function react(r){
   r = String(r).trim().slice(0, 60);
-  if (!r || !sala || mySeat === null) return;
+  if (!r || !sala || mySeat === null || (S && S.phase === "play" && mySeat !== S.setter)) return;
   const now = Date.now();
   if (now - lastReact < 1200) return; // sin spam: ntfy limita los envíos
   lastReact = now;
@@ -633,9 +928,50 @@ function press(L){
   for (let k = 0; k < 16; k++) $("lights").append(document.createElement("i"));
 })();
 
+// fondo romántico (solo con el perrito)
+(() => {
+  const lf = $("lovefall"), em = ["❤️", "🌹", "💕", "💋", "🥂", "🌸", "💗", "🍷", "💌"];
+  for (let k = 0; k < 24; k++){
+    const f = document.createElement("i"); f.textContent = em[k % em.length];
+    f.style.left = Math.random() * 100 + "%";
+    f.style.fontSize = 12 + Math.random() * 12 + "px";
+    f.style.animationDuration = 11 + Math.random() * 10 + "s";
+    f.style.animationDelay = -Math.random() * 20 + "s";
+    f.style.setProperty("--sx", (Math.random() * 60 - 30) + "px");
+    lf.append(f);
+  }
+})();
+// perrito: el fallo n de N se convierte en la desgracia 1..10 (con menos intentos se saltan algunas; la última siempre es caerse)
+const evOf = (e, max) => e <= 0 ? 0 : Math.min(10, Math.max(e, Math.round(e * 10 / max)));
+const HIT = [0, .45, .9, 1.9, 1, 2.05, .95, 1, 1.4, 1.6, 1.55]; // segundo en que "le pasa" y se le nota
+let pupT = [], pupBusy = 0;
+function pupLevel(L){
+  const sv = $("pup");
+  sv.style.setProperty("--w", 1 + .17 * Math.min(L, 9)); // cada vez camina más despacio
+  sv.querySelectorAll("[data-l]").forEach(el => el.classList.toggle("on", L >= +el.dataset.l));
+  sv.querySelectorAll("[data-gone]").forEach(el => el.classList.toggle("off", L >= +el.dataset.gone));
+  sv.classList.toggle("limp", L >= 8 && L < 10);
+  sv.classList.toggle("sad", L >= 6);
+  sv.classList.toggle("down", L >= 10);
+}
+function drawPup(e, max, won, play){
+  const sv = $("pup"), k = evOf(e, max);
+  sv.classList.toggle("happy", won);
+  if (play && k > 0 && k !== evOf(e - 1, max)){
+    pupT.forEach(clearTimeout);
+    for (let i = 1; i <= 10; i++) sv.classList.remove("ev" + i);
+    pupLevel(evOf(e - 1, max));
+    void sv.getBoundingClientRect();
+    sv.classList.add("ev" + k);
+    pupBusy = Date.now() + 2650;
+    pupT = [setTimeout(() => pupLevel(k), HIT[k] * 1000), setTimeout(() => sv.classList.remove("ev" + k), 2650)];
+  } else if (Date.now() > pupBusy) pupLevel(k);
+}
+
 /* ---------- muñequitos ---------- */
 const SKINS = {
   clasico: { label: "Clásico", icon: '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 36H23M11 36V5H27V9"/><circle cx="27" cy="13" r="4"/><path d="M27 17V26M27 20l-4 4M27 20l4 4M27 26l-3 5M27 26l3 5"/></svg>' },
+  perro: { label: "Perrito", icon: '<svg viewBox="0 0 40 40"><path d="M10 13q-7 0-7 10q0 8 5 9q4-1 4-8q0-7-2-11z" fill="#1f1f1f"/><circle cx="17" cy="20" r="10" fill="#fff" stroke="#2b2b2b" stroke-width="1.6"/><ellipse cx="26.5" cy="23.5" rx="7" ry="5.2" fill="#fff" stroke="#2b2b2b" stroke-width="1.6"/><ellipse cx="23" cy="22.5" rx="4" ry="3.6" fill="#fff"/><ellipse cx="32.4" cy="21.8" rx="2.2" ry="1.8" fill="#1f1f1f"/><circle cx="20" cy="17" r="1.7" fill="#1f1f1f"/><circle cx="21.5" cy="23" r="1.6" fill="#ffb3c1"/><path d="M11 29q6 4 12 1" stroke="#e23d5b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>' },
   nieve: { label: "Muñeco de nieve", icon: '<svg viewBox="0 0 40 40"><circle cx="20" cy="29" r="8.5" fill="#eef4fa"/><circle cx="20" cy="17.5" r="6.2" fill="#eef4fa"/><rect x="15" y="5" width="10" height="7" rx="1.5" fill="#2b2d42"/><rect x="12.5" y="11" width="15" height="2.4" rx="1.2" fill="#2b2d42"/><circle cx="17.8" cy="16.6" r="1" fill="#22223b"/><circle cx="22.2" cy="16.6" r="1" fill="#22223b"/><path d="M20 18.4l5 1-5 1z" fill="#f28c38"/><path d="M20 23.6l-3.4-2v4zM20 23.6l3.4-2v4z" fill="#e05263"/></svg>' },
 };
 function skinPicker(box){
@@ -712,7 +1048,7 @@ function waitText(msg){
   $("waitMsg").append(d);
 }
 
-const deathText = () => (S.roundSkin === "nieve" ? "¡Se derritió el muñeco de nieve!" : "¡Se murió el muñequito!");
+const deathText = () => (S.roundSkin === "nieve" ? "¡Se derritió el muñeco de nieve!" : S.roundSkin === "perro" ? "¡Pobre perrito, ya no pudo más!" : "¡Se murió el muñequito!");
 function renderBoard(){
   const used = new Set(S.used), over = S.phase === "done", meGuess = mySeat === S.guesser && !over;
   const max = S.max || 6, lost = S.errors >= max;
@@ -741,7 +1077,8 @@ function renderBoard(){
     p.classList.toggle("show", on);
   });
   const skin = S.roundSkin || "clasico";
-  $("fig").toggleAttribute("hidden", skin !== "clasico"); $("snow").toggleAttribute("hidden", skin !== "nieve"); // en SVG .hidden no existe
+  $("fig").toggleAttribute("hidden", skin !== "clasico"); $("snow").toggleAttribute("hidden", skin !== "nieve"); $("pup").toggleAttribute("hidden", skin !== "perro"); // en SVG .hidden no existe
+  if (skin === "perro") drawPup(S.errors, max, over && !lost, fresh.miss);
   if (skin === "nieve") drawSnow(Math.min(1, S.errors / max), lost);
   const fig = $("fig");
   if (lost && !fig.classList.contains("dead")) fig.style.setProperty("--d", (order * 0.6 + 0.5) + "s"); // muere al acabar el último trazo
