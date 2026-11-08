@@ -344,6 +344,13 @@ body.ingame.menu-open #topbox{transform:none;visibility:visible;transition:trans
 body.ingame #topbox h1{font-size:1.7rem}
 body.ingame .wrap{padding-top:44px}
 @media (prefers-reduced-motion:reduce){body.ingame #topbox{transition:none}}
+/* teléfonos bajos: teclado y espacios más compactos para que todo quepa */
+@media (max-height:760px){
+  .keys{gap:5px}.keys button{min-height:40px}
+  #vPlay.card{padding:12px;gap:8px}
+  .word{gap:6px 5px;font-size:clamp(1.3rem,6.5vw,2rem)}
+}
+@media (max-height:620px){.keys button{min-height:36px;font-size:1rem}}
 /* reacciones: emojis y frases que suben por la pantalla un momento */
 #reactBtn{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:5;width:56px;height:56px;min-height:0;padding:0;border-radius:50%;background:var(--peach);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.4);transition:transform .2s}
 #reactBtn[aria-expanded="true"]{transform:rotate(-12deg) scale(.92)}
@@ -674,7 +681,7 @@ body.has-react{padding-bottom:80px}
 
 <script>
 // si GitHub Pages sirve una copia vieja guardada en el navegador, se recarga sola con la versión nueva (la partida se mantiene)
-const BUILD = "1794099669";
+const BUILD = "1794100163";
 async function checkBuild(){
   try {
     const t = await (await fetch(location.pathname + "?b=" + Date.now(), { cache: "no-store" })).text();
@@ -858,7 +865,7 @@ function render(){
     waitText(`${nameOf(S.setter)} está escribiendo la palabra secreta`);
     return show("vWait");
   }
-  renderBoard(); show("vPlay");
+  renderBoard(); show("vPlay"); fitScene(); requestAnimationFrame(fitScene);
 }
 
 let seen = { word: null, g: null, used: [], over: false };
@@ -1111,6 +1118,17 @@ function waitText(msg){
 }
 
 const deathText = () => (S.roundSkin === "nieve" ? "¡Se derritió el muñeco de nieve!" : S.roundSkin === "perro" ? "¡Pobre perrito, ya no pudo más!" : "¡Se murió el muñequito!");
+// en pantallas bajas encoge el dibujo lo justo para que palabra y teclado quepan sin desplazarse
+function fitScene(){
+  const sc = ["fig", "snow", "pup"].map($).find(e => !e.hasAttribute("hidden"));
+  if (!sc || $("vPlay").hidden) return;
+  sc.style.maxWidth = "";
+  const r = sc.getBoundingClientRect(), vh = (window.visualViewport || window).height ?? innerHeight;
+  const over = $("keys").getBoundingClientRect().bottom + scrollY + 14 - vh;
+  if (over > 0 && r.width) sc.style.maxWidth = Math.max(120, r.width - over * r.width / r.height) + "px";
+}
+window.addEventListener("resize", () => { if (S && S.phase !== "choose") fitScene(); });
+document.fonts?.ready.then(() => S && fitScene()); // las letras grandes cambian de alto al cargar la fuente
 function renderBoard(){
   const used = new Set(S.used), over = S.phase === "done", meGuess = mySeat === S.guesser && !over;
   const max = S.max || 6, lost = S.errors >= max;
