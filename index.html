@@ -61,9 +61,10 @@ svg.dead #man{animation:drop .35s ease-in var(--d,0s) both,swing 2.2s ease-in-ou
 @keyframes drop{0%{transform:translateY(0)}60%{transform:translateY(7px)}100%{transform:translateY(4px)}}
 @keyframes swing{0%,100%{transform:translateY(4px) rotate(-5deg)}50%{transform:translateY(4px) rotate(5deg)}}
 select{font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--chalk);width:100%}
-.word{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 5px;font-family:var(--display);font-weight:500;font-size:clamp(1.5rem,7.5vw,2.2rem)}
+.word{display:flex;flex-wrap:wrap;justify-content:center;gap:10px .55em;font-family:var(--display);font-weight:500;font-size:clamp(1.5rem,7.5vw,2.2rem)}
 .word i{font-style:normal;width:1.05em;text-align:center;border-bottom:3px solid var(--chalk);line-height:1.2}
 .word i.sp{border:0;width:.5em}
+.word .wd{display:flex;flex-wrap:wrap;justify-content:center;gap:inherit;column-gap:5px}
 .word i.miss{color:var(--red)}
 .hint,.lives,.center{text-align:center;color:var(--dim);margin:0}
 .hint strong{color:var(--butter)}
@@ -74,6 +75,8 @@ select{font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px so
 .keys button.no{background:transparent;color:var(--dim);border:2px solid var(--line);text-decoration:line-through}
 .keys button:disabled{cursor:default}
 .keys.wait button:not(.ok):not(.no){opacity:.4}
+/* quien solo mira no pulsa letras: teclado pequeño, solo para ver cuáles se dijeron */
+.keys.wait{gap:4px}.keys.wait button{min-height:30px;font-size:.85rem;border-radius:8px}
 .big{font-family:var(--display);font-weight:500;font-size:1.5rem;text-align:center;margin:0;text-wrap:balance}
 .big:empty{display:none}
 .wait-msg{font-family:var(--display);font-weight:500;font-size:1.3rem;text-align:center;margin:0;color:var(--butter);text-wrap:balance}
@@ -348,23 +351,23 @@ body.ingame .wrap{padding-top:44px}
 @media (max-height:760px){
   .keys{gap:5px}.keys button{min-height:40px}
   #vPlay.card{padding:12px;gap:8px}
-  .word{gap:6px 5px;font-size:clamp(1.3rem,6.5vw,2rem)}
+  .word{row-gap:6px;font-size:clamp(1.3rem,6.5vw,2rem)}
 }
 @media (max-height:620px){.keys button{min-height:36px;font-size:1rem}}
 /* reacciones: emojis y frases que suben por la pantalla un momento */
-#reactBtn{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:5;width:56px;height:56px;min-height:0;padding:0;border-radius:50%;background:var(--peach);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.4);transition:transform .2s}
+#reactBtn{position:fixed;left:max(10px,env(safe-area-inset-left,0px));top:10px;z-index:30;width:44px;height:44px;min-height:0;padding:0;border-radius:50%;background:var(--peach);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.4);transition:transform .2s}
 #reactBtn[aria-expanded="true"]{transform:rotate(-12deg) scale(.92)}
-.react{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + 66px);z-index:5;width:min(340px,calc(100vw - 24px));
+.react{position:fixed;left:max(10px,env(safe-area-inset-left,0px));top:62px;z-index:30;width:min(340px,calc(100vw - 24px));
   background:var(--board);border:2px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:8px;padding:10px;
-  transform-origin:100% 100%;animation:popIn .18s ease-out}
-@keyframes popIn{from{opacity:0;transform:scale(.85) translateY(8px)}}
+  transform-origin:0 0;animation:popIn .18s ease-out}
+@keyframes popIn{from{opacity:0;transform:scale(.85) translateY(-8px)}}
 .emos{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
 .emos button{background:transparent;font-size:1.5rem;min-height:42px;padding:0;border-radius:10px}
 .emos button:hover,.emos button:focus-visible{background:var(--key)}
 .say{display:flex;gap:6px;max-width:560px;margin:0 auto;width:100%}
 .say input{padding:9px 12px;font-size:16px;min-width:0}
 .say button{min-height:44px;padding:0 16px;background:var(--peach)}
-body.has-react{padding-bottom:80px}
+body.has-react{padding-bottom:0}
 #floaters{position:fixed;inset:0;pointer-events:none;z-index:6;overflow:hidden}
 .floater{position:absolute;bottom:140px;max-width:72vw;background:var(--board);color:var(--chalk);padding:8px 14px;border-radius:18px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.4);overflow-wrap:anywhere;animation:floatUp 3.2s ease-out forwards}
 .floater small{color:var(--peach);font-weight:800;font-size:.85rem}
@@ -673,7 +676,7 @@ body.has-react{padding-bottom:80px}
 </div>
 <div id="confetti" aria-hidden="true"></div>
 <div id="floaters" aria-live="polite"></div>
-<button type="button" id="reactBtn" aria-label="Reacciones" aria-expanded="false" aria-controls="react" hidden><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M8 14.5c1 1.6 2.4 2.4 4 2.4s3-.8 4-2.4"/><circle cx="9" cy="9.8" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.8" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+<button type="button" id="reactBtn" aria-label="Reacciones" aria-expanded="false" aria-controls="react" hidden><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M8 14.5c1 1.6 2.4 2.4 4 2.4s3-.8 4-2.4"/><circle cx="9" cy="9.8" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.8" r="1.1" fill="currentColor" stroke="none"/></svg></button>
 <form class="react" id="react" hidden>
   <div class="emos" id="emos"></div>
   <div class="say"><input id="inSay" maxlength="60" autocomplete="off" enterkeyhint="send" placeholder="Escribe algo…" aria-label="Mensaje"><button type="submit">Enviar</button></div>
@@ -681,7 +684,7 @@ body.has-react{padding-bottom:80px}
 
 <script>
 // si GitHub Pages sirve una copia vieja guardada en el navegador, se recarga sola con la versión nueva (la partida se mantiene)
-const BUILD = "1794100241";
+const BUILD = "1794100712";
 async function checkBuild(){
   try {
     const t = await (await fetch(location.pathname + "?b=" + Date.now(), { cache: "no-store" })).text();
@@ -1124,7 +1127,7 @@ function fitScene(){
   if (!sc || $("vPlay").hidden) return;
   sc.style.maxWidth = "";
   const r = sc.getBoundingClientRect(), vh = (window.visualViewport || window).height ?? innerHeight;
-  const over = $("keys").getBoundingClientRect().bottom + scrollY + 14 - vh;
+  const over = $("vPlay").getBoundingClientRect().bottom + scrollY + 8 - vh; // tarjeta entera: teclado y, si hay, poderes
   if (over > 0 && r.width) sc.style.maxWidth = Math.max(120, r.width - over * r.width / r.height) + "px";
 }
 window.addEventListener("resize", () => { if (S && S.phase !== "choose") fitScene(); });
@@ -1139,13 +1142,15 @@ function renderBoard(){
   const fresh = { last, miss: !!last && ![...S.word].some(c => norm(c) === last), won: sameRound && over && !lost && !seen.over };
   seen = { word: S.word, g: S.setter, used: [...S.used], over };
   $("word").innerHTML = "";
+  let wd = null; // cada palabra va junta en un bloque, así el salto de línea cae entre palabras y no en medio
   for (const c of S.word){
+    if (c === " "){ wd = null; continue; }
+    if (!wd){ wd = document.createElement("span"); wd.className = "wd"; $("word").append(wd); }
     const i = document.createElement("i");
-    if (c === " ") i.className = "sp";
-    else if (shown(c)){ i.textContent = c; i.className = "sp"; }
+    if (shown(c)){ i.textContent = c; i.className = "sp"; }
     else if (used.has(norm(c))){ i.textContent = c.toUpperCase(); if (newL.includes(norm(c))) i.className = "pop"; }
     else if (over || mySeat === S.setter){ i.textContent = c.toUpperCase(); i.className = "miss"; } // quien la puso la ve en rojo
-    $("word").append(i);
+    wd.append(i);
   }
   // como en papel: empieza en blanco y cada fallo dibuja los siguientes trazos (suelo, palo, viga, cuerda, cabeza…);
   // con menos de 10 intentos cada fallo dibuja varios trazos seguidos
