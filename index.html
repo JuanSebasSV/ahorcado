@@ -360,6 +360,7 @@ body.has-react{padding-bottom:150px}
     <div class="p" id="p1"><div><small id="t1"></small><b id="n1"></b></div><span id="s1">0</span></div>
     <div class="p" id="p2" hidden><div><small id="t2"></small><b id="n2"></b></div><span id="s2">0</span></div>
   </div>
+  <button type="button" class="ghost" id="toMenu" hidden>⌂ Volver al menú</button>
   <button type="button" class="ghost" id="invite3" hidden>＋ Invitar a una tercera persona (opcional)</button>
   <p class="status" id="status"></p>
 
@@ -695,6 +696,7 @@ function apply(seat, a){
       if (won) guessers(s).forEach(i => s.pts[i]++); else s.pts[s.setter]++; // adivinan: +1 cada uno; muere: +1 a quien la puso
     } else s.guesser = nextG(s, seat); // turno del siguiente que adivina (con 2 jugadores no cambia)
   }
+  else if (a.t === "menu" && s.phase !== "choose"){ Object.assign(s, { phase: "choose", word: "", hint: "", used: [], errors: 0 }); } // sin puntos para nadie
   else if (a.t === "skin" && (s.phase === "done" || s.phase === "choose") && a.k in SKINS){ s.skin = a.k; }
   else if (a.t === "next" && (s.phase === "done" || s.phase === "choose") && players(s).includes(a.w)){
     Object.assign(s, { phase: "secret", setter: a.w, word: "", hint: "", used: [], errors: 0 });
@@ -788,6 +790,7 @@ function render(){
   if (mySeat === -1 && S){ $("score").hidden = true; $("waitMsg").textContent = "Entrando en la partida…"; return show("vWait"); }
   if (!S){ $("score").hidden = true; $("waitMsg").textContent = "Cargando la partida…"; return show("vWait"); }
   $("score").hidden = false;
+  $("toMenu").hidden = S.phase === "choose" || players(S).length < 2;
   const theme = (S.phase === "play" || S.phase === "done") ? S.roundSkin : S.skin;
   document.body.classList.toggle("xmas", theme === "nieve"); document.body.classList.toggle("love", theme === "perro");
   const n = players(S).length;
@@ -1027,6 +1030,14 @@ function drawSnow(p, dead){
   sv.classList.toggle("dead", dead);
 }
 
+// dos toques para no salir sin querer a mitad de una palabra
+let menuArm = 0;
+$("toMenu").addEventListener("click", () => {
+  const b = $("toMenu");
+  if (S.phase === "done" || Date.now() < menuArm){ menuArm = 0; b.textContent = "⌂ Volver al menú"; return act({ t: "menu" }); }
+  menuArm = Date.now() + 3000; b.textContent = "¿Seguro? Se pierde esta palabra. Toca otra vez";
+  setTimeout(() => { if (Date.now() >= menuArm) b.textContent = "⌂ Volver al menú"; }, 3050);
+});
 $("react").addEventListener("submit", e => { e.preventDefault(); react($("inSay").value); $("inSay").value = ""; });
 function confetti(){
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
