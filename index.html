@@ -151,6 +151,26 @@ body.quake .wrap{animation:quake .22s linear infinite}
 .skin svg{width:46px;height:46px;display:block}
 .skin.sel{border-color:var(--yellow);background:#2e3a4b}
 @media (prefers-reduced-motion:reduce){#snow .man,#snow .rays,#snow .drip.on,#snow.dead .smoke circle,#snow.dead .core{animation:none}}
+/* ---- temática navideña con el muñeco de nieve ---- */
+#snow .flakes{transition:opacity 1.3s}
+#snow .flakes circle{animation:sflake linear infinite}
+@keyframes sflake{0%{transform:translate(0,0)}50%{transform:translate(5px,110px)}100%{transform:translate(-2px,225px)}}
+#snow .sleigh{animation:sleigh 15s linear infinite;animation-delay:-11s}
+@keyframes sleigh{0%{transform:translate(215px,44px)}32%{transform:translate(-70px,20px)}100%{transform:translate(-70px,20px)}}
+#snow .bob{animation:bob .9s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+#snowfall{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;opacity:0;transition:opacity 1.2s}
+body.xmas #snowfall{opacity:1}
+#snowfall i{position:absolute;top:-30px;color:#fff;opacity:.5;font-style:normal;animation:flake linear infinite}
+@keyframes flake{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(var(--sx),55vh) rotate(180deg)}100%{transform:translate(0,110vh) rotate(360deg)}}
+.wrap{position:relative;z-index:1}
+.lights{display:none;justify-content:space-between;align-items:flex-start;height:16px;margin-top:-6px;padding:0 4px;
+  background:radial-gradient(60% 300% at 50% -200%,transparent 96%,var(--line) 97%,var(--line) 100%,transparent 101%) 0 0/36px 10px repeat-x}
+body.xmas .lights{display:flex}
+.lights i{width:8px;height:11px;margin-top:4px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:currentColor;animation:blink 1.6s ease-in-out infinite}
+.lights i:nth-child(4n+1){color:#ff6b6b}.lights i:nth-child(4n+2){color:#ffd93d;animation-delay:.4s}.lights i:nth-child(4n+3){color:#6bcb77;animation-delay:.8s}.lights i:nth-child(4n){color:#4d96ff;animation-delay:1.2s}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 9px currentColor}50%{opacity:.35;box-shadow:none}}
+@media (prefers-reduced-motion:reduce){#snowfall,#snow .sleigh{display:none}#snow .flakes circle,.lights i{animation:none}}
 /* reacciones: emojis y frases que suben por la pantalla un momento */
 .react{position:fixed;left:0;right:0;bottom:0;z-index:4;background:rgba(28,33,48,.96);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;
   padding:8px max(12px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
@@ -170,8 +190,10 @@ body.has-react{padding-bottom:150px}
 </style>
 </head>
 <body>
+<div id="snowfall" aria-hidden="true"></div>
 <div class="wrap">
   <h1>Ahorcado a dos</h1>
+  <div class="lights" id="lights" aria-hidden="true"></div>
   <div class="score" id="score" hidden>
     <div class="p" id="p0"><div><small id="t0"></small><b id="n0"></b></div><span id="s0">0</span></div>
     <div class="p" id="p1"><div><small id="t1"></small><b id="n1"></b></div><span id="s1">0</span></div>
@@ -244,6 +266,7 @@ body.has-react{padding-bottom:150px}
         <radialGradient id="glowG"><stop offset="0" stop-color="#fff2a8" stop-opacity=".95"/><stop offset="1" stop-color="#ffb23c" stop-opacity="0"/></radialGradient>
         <radialGradient id="ballG" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#eef4fa"/><stop offset="1" stop-color="#cddbe8"/></radialGradient>
         <mask id="moonM"><circle cx="42" cy="36" r="11" fill="#fff"/><circle cx="47" cy="32" r="10" fill="#000"/></mask>
+        <g id="deer"><ellipse cx="6" cy="8" rx="6" ry="3.2" fill="#8b5a3c"/><circle cx="0.5" cy="4.5" r="2.4" fill="#8b5a3c"/><circle cx="-1.6" cy="4.8" r="1" fill="#ff4b4b"/><path d="M1 2.4l-1.2-3M1 2.4l2-2.8M-.4 .2l-1.6-.8M2.6 .1l1.6-.6" stroke="#5c3b28" stroke-width=".8" fill="none" stroke-linecap="round"/><path d="M2.5 10.5v3.5M9.5 10.5v3.5" stroke="#5c3b28" stroke-width="1.2" stroke-linecap="round"/></g>
       </defs>
       <rect width="200" height="220" fill="url(#skyN)"/>
       <rect class="sky-d" width="200" height="220" fill="url(#skyD)"/>
@@ -255,9 +278,26 @@ body.has-react{padding-bottom:150px}
         <path class="rays" d=""/>
         <circle class="core" cx="160" cy="48" r="15" fill="url(#sunG)"/>
       </g>
+      <g class="sleigh"><g class="bob">
+        <use href="#deer" x="0"/><use href="#deer" x="15"/>
+        <path d="M11 8L31 9" stroke="#e8c15a" stroke-width=".8" fill="none"/>
+        <rect x="35" y="0" width="7" height="6" rx="1" fill="#4d96ff"/><path d="M38.5 0v6M35 3h7" stroke="#ffd93d" stroke-width="1"/>
+        <path d="M31 5h15q4 0 4 5v2H35q-4 0-4-4z" fill="#d64550"/>
+        <path d="M29 14.5h21q3 0 4-3" stroke="#e8c15a" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+      </g></g>
       <rect y="197" width="200" height="23" fill="#e6eff7"/>
       <path d="M0 199q20-6 40 0t40 0t40 0t40 0t40 0V220H0z" fill="#f4f8fc"/>
       <rect class="wet" y="197" width="200" height="23" fill="#7c9c8b"/>
+      <g class="deco">
+        <path d="M157 172l-9 12h5l-7 9h22l-7-9h5z" fill="#2f7a55"/><rect x="155.5" y="192" width="3" height="7" fill="#6b4b35"/>
+        <circle cx="157" cy="171" r="1.9" fill="#ffd93d"/><circle cx="153" cy="182" r="1.3" fill="#ff6b6b"/><circle cx="161" cy="187" r="1.3" fill="#4d96ff"/><circle cx="152" cy="190" r="1.2" fill="#ffd93d"/>
+        <path d="M8 199V180a6 6 0 0 1 12 0v3" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <path d="M8 199V180a6 6 0 0 1 12 0v3" fill="none" stroke="#e23d4b" stroke-width="4" stroke-dasharray="3 3"/>
+        <path d="M8 187l-4.5-2.8v5.6zM8 187l4.5-2.8v5.6z" fill="#3fa36b"/><circle cx="8" cy="187" r="1.2" fill="#2c7a4f"/>
+        <path d="M190 199V180a6 6 0 0 0 -12 0v3" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <path d="M190 199V180a6 6 0 0 0 -12 0v3" fill="none" stroke="#e23d4b" stroke-width="4" stroke-dasharray="3 3"/>
+        <path d="M190 187l-4.5-2.8v5.6zM190 187l4.5-2.8v5.6z" fill="#3fa36b"/><circle cx="190" cy="187" r="1.2" fill="#2c7a4f"/>
+      </g>
       <ellipse class="puddle" cx="125" cy="203" rx="38" ry="5" fill="#9ccfee"/>
       <g class="wood" fill="none" stroke="#7a5843" stroke-linecap="round"><path d="M30 199V16H131" stroke-width="6"/><path d="M30 46L60 16" stroke-width="4"/><path d="M14 199H48" stroke-width="6"/></g>
       <path d="M125 16V89" stroke="#c9a46c" stroke-width="2.5" fill="none"/>
@@ -292,6 +332,7 @@ body.has-react{padding-bottom:150px}
         <path class="acc acc-nose" d="M125 75.5l18 3.2-18 3.3z" fill="#f28c38" style="--dx:40px;--dy:120px;--r:20deg"/>
         <g class="acc acc-eyes" style="--dx:-56px;--dy:128px;--r:0deg"><circle cx="119" cy="71" r="2.5" fill="#22223b"/><circle cx="131" cy="71" r="2.5" fill="#22223b"/><circle cx="119.9" cy="70.1" r=".8" fill="#fff"/><circle cx="131.9" cy="70.1" r=".8" fill="#fff"/></g>
       </g>
+      <g class="flakes" fill="#fff"><circle cx="12" cy="-4" r="1.2" style="animation-duration:7s;animation-delay:-1s"/><circle cx="30" cy="-4" r="0.9" style="animation-duration:9s;animation-delay:-4s"/><circle cx="48" cy="-4" r="1.5" style="animation-duration:6.5s;animation-delay:-2s"/><circle cx="66" cy="-4" r="1" style="animation-duration:8s;animation-delay:-6s"/><circle cx="84" cy="-4" r="1.3" style="animation-duration:7.5s;animation-delay:-3s"/><circle cx="102" cy="-4" r="0.8" style="animation-duration:10s;animation-delay:-5s"/><circle cx="118" cy="-4" r="1.4" style="animation-duration:6.8s;animation-delay:-0.5s"/><circle cx="136" cy="-4" r="1" style="animation-duration:8.5s;animation-delay:-7s"/><circle cx="152" cy="-4" r="1.6" style="animation-duration:7.2s;animation-delay:-2.5s"/><circle cx="168" cy="-4" r="0.9" style="animation-duration:9.5s;animation-delay:-6.5s"/><circle cx="184" cy="-4" r="1.2" style="animation-duration:6.6s;animation-delay:-4.5s"/><circle cx="196" cy="-4" r="1" style="animation-duration:8.8s;animation-delay:-1.5s"/></g>
       <g class="smoke" fill="#d8d8d8"><circle cx="125" cy="168" r="8" style="--k:0s"/><circle cx="116" cy="176" r="7" style="--k:.7s"/><circle cx="134" cy="173" r="7" style="--k:1.4s"/></g>
       <g class="rip"><path d="M170 199v-13" stroke="#6b4b35" stroke-width="2.5"/><rect x="155" y="175" width="30" height="12" rx="2" fill="#a07850"/><text x="170" y="183.6" font-size="6.5" text-anchor="middle" fill="#fff" font-family="Fredoka,sans-serif">Q.E.P.D.</text></g>
     </svg>
@@ -453,6 +494,7 @@ function render(){
   if (mySeat === -1 && S){ $("score").hidden = true; $("waitMsg").textContent = "Entrando en la partida…"; return show("vWait"); }
   if (!S){ $("score").hidden = true; $("waitMsg").textContent = "Cargando la partida…"; return show("vWait"); }
   $("score").hidden = false;
+  document.body.classList.toggle("xmas", ((S.phase === "play" || S.phase === "done") ? S.roundSkin : S.skin) === "nieve");
   const n = players(S).length;
   const reacting = n >= 2 && !(S.phase === "secret" && mySeat === S.setter); // no tapa el formulario de la palabra
   $("react").hidden = !reacting; document.body.classList.toggle("has-react", reacting);
@@ -576,6 +618,21 @@ function press(L){
   }
   act({ t: "guess", l: L });
 }
+// nieve de fondo y guirnalda (solo se ven con el muñeco de nieve)
+(() => {
+  const sf = $("snowfall");
+  for (let k = 0; k < 26; k++){
+    const f = document.createElement("i"); f.textContent = k % 3 ? "•" : "❄";
+    f.style.left = Math.random() * 100 + "%";
+    f.style.fontSize = (k % 3 ? 8 + Math.random() * 8 : 12 + Math.random() * 10) + "px";
+    f.style.animationDuration = 9 + Math.random() * 10 + "s";
+    f.style.animationDelay = -Math.random() * 18 + "s";
+    f.style.setProperty("--sx", (Math.random() * 60 - 30) + "px");
+    sf.append(f);
+  }
+  for (let k = 0; k < 16; k++) $("lights").append(document.createElement("i"));
+})();
+
 /* ---------- muñequitos ---------- */
 const SKINS = {
   clasico: { label: "Clásico", icon: '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 36H23M11 36V5H27V9"/><circle cx="27" cy="13" r="4"/><path d="M27 17V26M27 20l-4 4M27 20l4 4M27 26l-3 5M27 26l3 5"/></svg>' },
@@ -604,6 +661,7 @@ function drawSnow(p, dead){
   q(".sky-d").style.opacity = cl(p * 2.2);
   q(".sky-h").style.opacity = cl((p - .5) * 2.2);
   q(".stars").style.opacity = cl(1 - p * 3);
+  q(".flakes").style.opacity = cl(1 - p * 1.4); // con el calor deja de nevar
   q(".moon").style.transform = `translateY(${cl(p * 2.5) * 190}px)`;
   q(".sun").style.transform = `translateY(${(1 - cl(p / .7)) * 170}px)`;
   q(".core").style.transform = `scale(${1 + cl((p - .6) / .4) * .6})`;
