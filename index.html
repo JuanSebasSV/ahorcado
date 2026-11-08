@@ -331,11 +331,14 @@ body.love .lights i::before{content:"♥"}
 body.love .lights i:nth-child(4n+1){color:#ff6b8a}body.love .lights i:nth-child(4n+2){color:#ffc2d1}body.love .lights i:nth-child(4n+3){color:#e23d5b}body.love .lights i:nth-child(4n){color:#ff9ebb}
 @keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){#lovefall,#cupids{display:none}#pup .scroll,#pup .walker,#pup .leg,#pup .tail,#pup .ear{animation:none}}
-/* en el teléfono, mientras se adivina, solo el muñequito y las letras */
-@media (max-width:600px){
-  body.playing h1,body.playing .lights,body.playing #score,body.playing #invite3{display:none!important}
-  body.playing #toMenu{min-height:34px;padding:6px 14px;font-size:.85rem;align-self:flex-end;width:auto;margin-left:auto}
-}
+/* en partida, título, marcadores y botones van en un menú de hamburguesa: arriba queda el muñequito */
+#topbox{display:flex;flex-direction:column;gap:12px}
+#burger{position:fixed;top:10px;right:10px;z-index:30;min-height:44px;width:44px;padding:0;border-radius:12px;background:var(--key);color:var(--chalk);border:2px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+body.ingame #topbox{position:fixed;top:0;right:0;z-index:25;width:min(360px,100vw);max-height:100vh;overflow:auto;padding:62px 14px 16px;background:var(--bg);border:2px solid var(--line);border-top:0;border-right:0;border-radius:0 0 0 18px;box-shadow:-6px 8px 30px rgba(0,0,0,.5);transform:translateY(-105%);visibility:hidden;transition:transform .3s ease,visibility 0s .3s}
+body.ingame.menu-open #topbox{transform:none;visibility:visible;transition:transform .3s ease}
+body.ingame #topbox h1{font-size:1.7rem}
+body.ingame .wrap{padding-top:44px}
+@media (prefers-reduced-motion:reduce){body.ingame #topbox{transition:none}}
 /* reacciones: emojis y frases que suben por la pantalla un momento */
 .react{position:fixed;left:0;right:0;bottom:0;z-index:4;background:rgba(28,33,48,.96);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;
   padding:8px max(12px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
@@ -359,6 +362,8 @@ body.has-react{padding-bottom:150px}
 <div id="lovefall" aria-hidden="true"></div>
 <div id="cupids" aria-hidden="true"><i>👼</i><i>👼</i></div>
 <div class="wrap">
+  <button type="button" id="burger" aria-label="Menú" aria-expanded="false" aria-controls="topbox" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div id="topbox">
   <h1>Ahorcado a dos</h1>
   <div class="lights" id="lights" aria-hidden="true"></div>
   <div class="score" id="score" hidden>
@@ -368,6 +373,7 @@ body.has-react{padding-bottom:150px}
   </div>
   <button type="button" class="ghost" id="toMenu" hidden>⌂ Volver al menú</button>
   <button type="button" class="ghost" id="invite3" hidden>＋ Invitar a una tercera persona (opcional)</button>
+  </div>
   <p class="status" id="status"></p>
 
   <form class="card" id="vName" hidden>
@@ -792,12 +798,13 @@ function connect(){
 function show(v){ for (const id of ["vName","vInvite","vChoose","vSecret","vWait","vPlay"]) $(id).hidden = id !== v; }
 
 function render(){
+  document.body.classList.toggle("ingame", !!S && mySeat !== null && mySeat >= 0);
+  $("burger").hidden = !document.body.classList.contains("ingame");
   if (mySeat === null){ $("score").hidden = true; return show("vName"); }
   if (mySeat === -1 && S){ $("score").hidden = true; $("waitMsg").textContent = "Entrando en la partida…"; return show("vWait"); }
   if (!S){ $("score").hidden = true; $("waitMsg").textContent = "Cargando la partida…"; return show("vWait"); }
   $("score").hidden = false;
   $("toMenu").hidden = S.phase === "choose" || players(S).length < 2;
-  document.body.classList.toggle("playing", S.phase === "play");
   const theme = (S.phase === "play" || S.phase === "done") ? S.roundSkin : S.skin;
   document.body.classList.toggle("xmas", theme === "nieve"); document.body.classList.toggle("love", theme === "perro");
   const n = players(S).length;
@@ -1038,11 +1045,16 @@ function drawSnow(p, dead){
   sv.classList.toggle("dead", dead);
 }
 
+// menú de hamburguesa: se abre con el botón y se cierra al tocar fuera o al elegir algo
+const setMenu = o => { document.body.classList.toggle("menu-open", o); $("burger").setAttribute("aria-expanded", o); };
+$("burger").addEventListener("click", e => { e.stopPropagation(); setMenu(!document.body.classList.contains("menu-open")); });
+document.addEventListener("click", e => { if (!$("topbox").contains(e.target) || e.target.closest("#invite3")) setMenu(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
 // dos toques para no salir sin querer a mitad de una palabra
 let menuArm = 0;
 $("toMenu").addEventListener("click", () => {
   const b = $("toMenu");
-  if (S.phase === "done" || Date.now() < menuArm){ menuArm = 0; b.textContent = "⌂ Volver al menú"; return act({ t: "menu" }); }
+  if (S.phase === "done" || Date.now() < menuArm){ menuArm = 0; b.textContent = "⌂ Volver al menú"; setMenu(false); return act({ t: "menu" }); }
   menuArm = Date.now() + 3000; b.textContent = "¿Seguro? Se pierde esta palabra. Toca otra vez";
   setTimeout(() => { if (Date.now() >= menuArm) b.textContent = "⌂ Volver al menú"; }, 3050);
 });
